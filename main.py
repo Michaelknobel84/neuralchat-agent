@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-MODEL = "llama3-8b-8192"
+MODEL = "llama3-8b-8192"  # ALT - löschen
 
 SYSTEM = "Du bist ein persönlicher KI-Assistent. Antworte immer auf Deutsch, klar, freundlich und präzise."
 
