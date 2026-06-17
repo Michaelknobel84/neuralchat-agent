@@ -9,6 +9,7 @@ CORS(app)
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 MODEL = "llama3-8b-8192"  # ALT - löschen
+MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM = "Du bist ein persönlicher KI-Assistent. Antworte immer auf Deutsch, klar, freundlich und präzise."
 
