@@ -1,4 +1,4 @@
-html = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -50,12 +50,11 @@ html = '''<!DOCTYPE html>
   .value.ok{color:var(--ok)}
   .value.err{color:var(--err)}
   .btn{width:100%;border:none;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-top:8px}
-  .btn.secondary{background:var(--surface);border:1px solid var(--border)}
+  .btn.secondary{background:var(--surface);border:1px solid var(--border);color:var(--text)}
   .btn.danger{background:transparent;border:1px solid rgba(239,68,68,.35);color:var(--err)}
-  .quick{width:100%;text-align:left;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;margin-top:8px}
-  .quick:active,.btn:active,.send:active,.tab:active{transform:scale(.99)}
-  .out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;white-space:pre-wrap;line-height:1.65;color:#d7d7e3;min-height:100px;font-size:14px}
-  .group{background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .quick{width:100%;text-align:left;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;margin-top:8px;cursor:pointer}
+  .out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;white-space:pre-wrap;line-height:1.65;color:#d7d7e3;min-height:80px;font-size:14px}
+  .group{background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px}
   .ghead{padding:12px 15px;border-bottom:1px solid var(--border);font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
   .item{padding:14px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
   .item:last-child{border-bottom:none}
@@ -66,23 +65,27 @@ html = '''<!DOCTYPE html>
   .switch.on{background:var(--accent)}
   .switch:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
   .switch.on:after{left:25px}
-  .input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;outline:none}
-  .input:focus{border-color:var(--accent2)}
-  .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#171722;border:1px solid var(--accent);padding:10px 16px;border-radius:999px;color:var(--accent2);font-size:14px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999}
+  .urlinput{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;outline:none;font-family:inherit}
+  .urlinput:focus{border-color:var(--accent2)}
+  .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:#171722;border:1px solid var(--accent);padding:10px 18px;border-radius:999px;color:var(--accent2);font-size:14px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
   .toast.show{opacity:1}
 </style>
 </head>
 <body>
 <div class="app">
+
   <div class="header">
     <div class="brand">
       <div class="logo">🧠</div>
       <div>
         <div class="title">NeuralChat Pro</div>
-        <div class="subtitle" id="modelLabel">Mistral 7B</div>
+        <div class="subtitle">Mistral 7B</div>
       </div>
     </div>
-    <div class="online"><span class="dot" id="dot"></span><span id="statusTop">Online</span></div>
+    <div class="online">
+      <span class="dot" id="dot"></span>
+      <span id="statusTop">Online</span>
+    </div>
   </div>
 
   <div class="tabs">
@@ -94,12 +97,16 @@ html = '''<!DOCTYPE html>
   <div class="panel active" id="panel-chat">
     <div class="messages" id="messages">
       <div class="msgwrap bot">
-        <div class="bubble bot">Willkommen zurück 👑\nIch bin bereit. Wie kann ich dir helfen?</div>
+        <div class="bubble bot">Willkommen zurück 👑
+Ich bin bereit. Wie kann ich dir helfen?</div>
         <div class="time" id="welcomeTime"></div>
       </div>
     </div>
     <div class="inputbar">
-      <textarea id="input" rows="1" placeholder="Schreib eine Nachricht..." oninput="resizeInput(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+      <textarea id="input" rows="1" placeholder="Schreib eine Nachricht..."
+        oninput="resizeInput(this)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}">
+      </textarea>
       <button class="send" id="sendBtn" onclick="sendMessage()">➤</button>
     </div>
   </div>
@@ -114,15 +121,13 @@ html = '''<!DOCTYPE html>
         <div class="row"><div class="label">Version</div><div class="value" id="aVersion">-</div></div>
         <button class="btn secondary" onclick="checkStatus()">🔄 Status aktualisieren</button>
       </div>
-
       <div class="card">
         <h3>Schnell-Aktionen</h3>
-        <button class="quick" onclick="quickAsk('Gib mir 5 konkrete Produktivitäts-Tipps für heute.')">✅ Produktivitätstipps</button>
+        <button class="quick" onclick="quickAsk('Gib mir 5 konkrete Produktivitätstipps für heute.')">✅ Produktivitätstipps</button>
         <button class="quick" onclick="quickAsk('Gib mir einen kurzen, starken Motivationsspruch auf Deutsch.')">💪 Motivation</button>
-        <button class="quick" onclick="quickAsk('Generiere 5 kreative Ideen für ein kleines Online-Projekt.')">💡 Ideen</button>
+        <button class="quick" onclick="quickAsk('Generiere 5 kreative Ideen für ein kleines Online-Projekt.')">💡 Ideen generieren</button>
         <button class="quick" onclick="getSummary()">☀️ Tages-Zusammenfassung</button>
       </div>
-
       <div class="card">
         <h3>Ergebnis</h3>
         <div class="out" id="resultBox">Wähle eine Aktion aus.</div>
@@ -134,23 +139,194 @@ html = '''<!DOCTYPE html>
     <div class="scroll">
       <div class="group">
         <div class="ghead">Server</div>
-        <div class="item" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="item" style="flex-direction:column;align-items:stretch;gap:10px;">
           <div class="name">Agent-URL</div>
-          <input class="input" id="agentUrl" type="url" placeholder="https://...">
+          <input class="urlinput" id="agentUrl" type="url" placeholder="https://neuralchat-agent.onrender.com">
           <button class="btn" onclick="saveUrl()">💾 URL speichern</button>
         </div>
       </div>
-
       <div class="group">
         <div class="ghead">Darstellung</div>
-        <div class="item"><div class="info"><div class="name">🌙 Dark Mode</div><div class="desc">Dunkles Design</div></div><button class="switch on" id="swDark" onclick="toggleSwitch('dark',this)"></button></div>
-        <div class="item"><div class="info"><div class="name">⏰ Zeitstempel</div><div class="desc">Zeit bei Nachrichten anzeigen</div></div><button class="switch on" id="swTime" onclick="toggleSwitch('time',this)"></button></div>
+        <div class="item">
+          <div class="info"><div class="name">🌙 Dark Mode</div><div class="desc">Dunkles Design</div></div>
+          <button class="switch on" id="swDark" onclick="toggleSwitch('dark',this)"></button>
+        </div>
+        <div class="item">
+          <div class="info"><div class="name">⏰ Zeitstempel</div><div class="desc">Zeit bei Nachrichten</div></div>
+          <button class="switch on" id="swTime" onclick="toggleSwitch('time',this)"></button>
+        </div>
       </div>
-
       <div class="group">
         <div class="ghead">Daten</div>
-        <div class="item" style="flex-direction:column;align-items:stretch"><button class="btn danger" onclick="clearChat()">🗑️ Chat leeren</button></div>
+        <div class="item" style="flex-direction:column;align-items:stretch;">
+          <button class="btn danger" onclick="clearChat()">🗑️ Chat leeren</button>
+        </div>
       </div>
-
       <div class="group">
-        <div class="ghead">Inf
+        <div class="ghead">Info</div>
+        <div class="item"><div class="info"><div class="name">NeuralChat Pro</div><div class="desc">Version 2.0 — Powered by Mistral 7B</div></div></div>
+        <div class="item"><div class="info"><div class="name">Render Server</div><div class="desc">neuralchat-agent.onrender.com</div></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT = 'https://neuralchat-agent.onrender.com';
+const api = () => (localStorage.getItem('agentUrl') || DEFAULT).replace(/\/$/, '');
+const t = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'agent') checkStatus();
+}
+
+function resizeInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+function addMsg(text, type) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msgwrap ' + (type === 'user' ? 'user' : 'bot');
+  const b = document.createElement('div');
+  b.className = 'bubble ' + type;
+  b.textContent = text;
+  const tm = document.createElement('div');
+  tm.className = 'time';
+  tm.textContent = t();
+  wrap.appendChild(b);
+  wrap.appendChild(tm);
+  const msgs = document.getElementById('messages');
+  msgs.appendChild(wrap);
+  msgs.scrollTop = 1e9;
+  return wrap;
+}
+
+function addLoading() {
+  const wrap = document.createElement('div');
+  wrap.className = 'msgwrap bot';
+  const b = document.createElement('div');
+  b.className = 'bubble bot';
+  b.innerHTML = '⏳ Antwort kommt...';
+  const tm = document.createElement('div');
+  tm.className = 'time';
+  tm.textContent = t();
+  wrap.appendChild(b);
+  wrap.appendChild(tm);
+  document.getElementById('messages').appendChild(wrap);
+  document.getElementById('messages').scrollTop = 1e9;
+  return wrap;
+}
+
+async function sendMessage() {
+  const inp = document.getElementById('input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  resizeInput(inp);
+  document.getElementById('sendBtn').disabled = true;
+  addMsg(text, 'user');
+  const loader = addLoading();
+  try {
+    const res = await fetch(api() + '/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt: text})
+    });
+    const d = await res.json();
+    loader.remove();
+    addMsg(d.result || d.error || 'Keine Antwort.', 'bot');
+  } catch (e) {
+    loader.remove();
+    addMsg('Verbindungsfehler. Prüfe Settings → Agent-URL.', 'bot');
+  }
+  document.getElementById('sendBtn').disabled = false;
+}
+
+async function checkStatus() {
+  try {
+    const res = await fetch(api() + '/status');
+    const d = await res.json();
+    document.getElementById('aStatus').textContent = d.status || 'online';
+    document.getElementById('aStatus').className = 'value ok';
+    document.getElementById('aAgent').textContent = d.agent || '-';
+    document.getElementById('aTasks').textContent = d.tasks_count ?? '0';
+    document.getElementById('aVersion').textContent = d.version || '-';
+    document.getElementById('statusTop').textContent = 'Online';
+    document.getElementById('dot').style.background = 'var(--ok)';
+  } catch (e) {
+    document.getElementById('aStatus').textContent = 'Offline';
+    document.getElementById('aStatus').className = 'value err';
+    document.getElementById('statusTop').textContent = 'Offline';
+    document.getElementById('dot').style.background = 'var(--err)';
+  }
+}
+
+async function quickAsk(prompt) {
+  document.getElementById('resultBox').textContent = '⏳ Wird bearbeitet...';
+  try {
+    const res = await fetch(api() + '/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt})
+    });
+    const d = await res.json();
+    document.getElementById('resultBox').textContent = d.result || d.error || 'Fehler';
+  } catch (e) {
+    document.getElementById('resultBox').textContent = 'Fehler: ' + e.message;
+  }
+}
+
+async function getSummary() {
+  document.getElementById('resultBox').textContent = '⏳ Zusammenfassung wird erstellt...';
+  try {
+    const res = await fetch(api() + '/summary');
+    const d = await res.json();
+    document.getElementById('resultBox').textContent = d.result?.result || d.error || 'Fehler';
+  } catch (e) {
+    document.getElementById('resultBox').textContent = 'Fehler: ' + e.message;
+  }
+}
+
+function saveUrl() {
+  const u = document.getElementById('agentUrl').value.trim();
+  if (!u.startsWith('http')) { toast('❌ Ungültige URL!'); return; }
+  localStorage.setItem('agentUrl', u);
+  toast('✅ URL gespeichert!');
+  checkStatus();
+}
+
+function toggleSwitch(key, el) {
+  el.classList.toggle('on');
+  localStorage.setItem('sw-' + key, el.classList.contains('on') ? '1' : '0');
+}
+
+function clearChat() {
+  if (confirm('Chat wirklich löschen?')) {
+    document.getElementById('messages').innerHTML = '';
+    addMsg('Chat geleert. Wie kann ich helfen? 👑', 'bot');
+    toast('🗑️ Chat geleert');
+  }
+}
+
+// Init
+document.getElementById('welcomeTime').textContent = t();
+const savedUrl = localStorage.getItem('agentUrl');
+if (savedUrl) document.getElementById('agentUrl').value = savedUrl;
+checkStatus();
+</script>
+</body>
+</html>
