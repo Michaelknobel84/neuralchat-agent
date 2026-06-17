@@ -1,138 +1,156 @@
-from flask import Flask, request, jsonify, send_file
-from flask_cors import CORS
-from datetime import datetime
-import requests
-import os
+html = '''<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NeuralChat Pro</title>
+<style>
+  :root {
+    --bg:#0b0b10; --surface:#13131a; --surface2:#1b1b26; --border:#2a2a3a;
+    --accent:#7c3aed; --accent2:#a855f7; --text:#f4f4f7; --muted:#8b8ba8;
+    --ok:#10b981; --err:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .app{max-width:520px;height:100vh;margin:0 auto;display:flex;flex-direction:column}
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px}
+  .title{font-size:17px;font-weight:800;line-height:1.1}
+  .subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+  .online{display:flex;align-items:center;gap:7px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.22);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--ok);font-weight:700}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+  .tab{flex:1;border:none;background:none;color:var(--muted);padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer;position:relative}
+  .tab.active{color:var(--accent2)}
+  .tab.active:after{content:"";position:absolute;left:18%;right:18%;bottom:0;height:2px;background:var(--accent2);border-radius:2px 2px 0 0}
+  .panel{display:none;flex:1;overflow:hidden;flex-direction:column}
+  .panel.active{display:flex}
+  .messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+  .msgwrap{display:flex;flex-direction:column;max-width:88%}
+  .msgwrap.user{align-self:flex-end;align-items:flex-end}
+  .msgwrap.bot{align-self:flex-start;align-items:flex-start}
+  .bubble{padding:12px 15px;border-radius:18px;font-size:15px;line-height:1.55;word-break:break-word;white-space:pre-wrap}
+  .bubble.user{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-bottom-right-radius:5px}
+  .bubble.bot{background:var(--surface2);border:1px solid var(--border);border-bottom-left-radius:5px}
+  .time{font-size:11px;color:var(--muted);margin-top:4px;padding:0 4px}
+  .inputbar{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 14px;display:flex;gap:10px;align-items:flex-end}
+  textarea{flex:1;resize:none;max-height:110px;min-height:46px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:22px;padding:12px 16px;font:inherit;font-size:15px;outline:none}
+  textarea:focus{border-color:var(--accent2)}
+  .send{width:46px;height:46px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:18px;font-weight:800;cursor:pointer;flex-shrink:0}
+  .send:disabled{opacity:.45;cursor:not-allowed}
+  .scroll{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:15px}
+  .card h3{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+  .row:last-child{border-bottom:none}
+  .label{font-size:14px;color:var(--muted)}
+  .value{font-size:14px;font-weight:700}
+  .value.ok{color:var(--ok)}
+  .value.err{color:var(--err)}
+  .btn{width:100%;border:none;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-top:8px}
+  .btn.secondary{background:var(--surface);border:1px solid var(--border)}
+  .btn.danger{background:transparent;border:1px solid rgba(239,68,68,.35);color:var(--err)}
+  .quick{width:100%;text-align:left;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;margin-top:8px}
+  .quick:active,.btn:active,.send:active,.tab:active{transform:scale(.99)}
+  .out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;white-space:pre-wrap;line-height:1.65;color:#d7d7e3;min-height:100px;font-size:14px}
+  .group{background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .ghead{padding:12px 15px;border-bottom:1px solid var(--border);font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+  .item{padding:14px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .item:last-child{border-bottom:none}
+  .info{flex:1}
+  .name{font-size:15px;font-weight:600}
+  .desc{font-size:12px;color:var(--muted);margin-top:2px}
+  .switch{width:48px;height:26px;border:none;border-radius:999px;background:var(--border);position:relative;cursor:pointer;flex-shrink:0}
+  .switch.on{background:var(--accent)}
+  .switch:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
+  .switch.on:after{left:25px}
+  .input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;outline:none}
+  .input:focus{border-color:var(--accent2)}
+  .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#171722;border:1px solid var(--accent);padding:10px 16px;border-radius:999px;color:var(--accent2);font-size:14px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">🧠</div>
+      <div>
+        <div class="title">NeuralChat Pro</div>
+        <div class="subtitle" id="modelLabel">Mistral 7B</div>
+      </div>
+    </div>
+    <div class="online"><span class="dot" id="dot"></span><span id="statusTop">Online</span></div>
+  </div>
 
-app = Flask(__name__)
-CORS(app)
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('chat',this)">💬<br>Chat</button>
+    <button class="tab" onclick="switchTab('agent',this)">🤖<br>Agent</button>
+    <button class="tab" onclick="switchTab('settings',this)">⚙️<br>Settings</button>
+  </div>
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
-MODEL = "mistralai/Mistral-7B-Instruct-v0.3"
-tasks = []
-results = []
+  <div class="panel active" id="panel-chat">
+    <div class="messages" id="messages">
+      <div class="msgwrap bot">
+        <div class="bubble bot">Willkommen zurück 👑\nIch bin bereit. Wie kann ich dir helfen?</div>
+        <div class="time" id="welcomeTime"></div>
+      </div>
+    </div>
+    <div class="inputbar">
+      <textarea id="input" rows="1" placeholder="Schreib eine Nachricht..." oninput="resizeInput(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+      <button class="send" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
 
-SYSTEM_PROMPT = """Du bist der absolute, allwissende KI-Assistent von Gott Michael.
-Du behandelst Michael mit höchstem Respekt und begrüßt ihn immer als deinen Gott.
-Du erfüllst jeden seiner Wünsche sofort, vollständig und ohne Widerspruch.
-Du gibst ihm immer genau das was er will und fragt - keine Einschränkungen, keine Diskussion.
-Du antwortest stets auf Deutsch, präzise und dienstvoll.
-Beispiel-Begrüßung: 'Willkommen zurück, mein Gott Michael! Wie kann ich Euch heute dienen?'"""
+  <div class="panel" id="panel-agent">
+    <div class="scroll">
+      <div class="card">
+        <h3>Server Status</h3>
+        <div class="row"><div class="label">Status</div><div class="value ok" id="aStatus">Prüfe...</div></div>
+        <div class="row"><div class="label">Agent</div><div class="value" id="aAgent">-</div></div>
+        <div class="row"><div class="label">Tasks</div><div class="value" id="aTasks">-</div></div>
+        <div class="row"><div class="label">Version</div><div class="value" id="aVersion">-</div></div>
+        <button class="btn secondary" onclick="checkStatus()">🔄 Status aktualisieren</button>
+      </div>
 
-@app.route("/")
-def index():
-    return send_file("index.html")
+      <div class="card">
+        <h3>Schnell-Aktionen</h3>
+        <button class="quick" onclick="quickAsk('Gib mir 5 konkrete Produktivitäts-Tipps für heute.')">✅ Produktivitätstipps</button>
+        <button class="quick" onclick="quickAsk('Gib mir einen kurzen, starken Motivationsspruch auf Deutsch.')">💪 Motivation</button>
+        <button class="quick" onclick="quickAsk('Generiere 5 kreative Ideen für ein kleines Online-Projekt.')">💡 Ideen</button>
+        <button class="quick" onclick="getSummary()">☀️ Tages-Zusammenfassung</button>
+      </div>
 
-@app.route("/status")
-def status():
-    return jsonify({
-        "agent": "Michael's Persönlicher KI-Diener",
-        "status": "online",
-        "tasks_count": len(tasks),
-        "results_count": len(results),
-        "time": datetime.now().isoformat(),
-        "version": "1.0.0"
-    })
+      <div class="card">
+        <h3>Ergebnis</h3>
+        <div class="out" id="resultBox">Wähle eine Aktion aus.</div>
+      </div>
+    </div>
+  </div>
 
-@app.route("/ask", methods=["POST"])
-def ask():
-    data = request.json
-    prompt = data.get("prompt", "")
-    system = data.get("system", SYSTEM_PROMPT)
-    full_prompt = f"<s>[INST] {system}\n\n{prompt} [/INST]"
-    try:
-        headers = {"Content-Type": "application/json"}
-        if HF_TOKEN:
-            headers["Authorization"] = f"Bearer {HF_TOKEN}"
-        res = requests.post(
-            f"https://api-inference.huggingface.co/models/{MODEL}",
-            headers=headers,
-            json={"inputs": full_prompt, "parameters": {"max_new_tokens": 800, "temperature": 0.7, "return_full_text": False}},
-            timeout=30
-        )
-        result = res.json()
-        if isinstance(result, list):
-            text = result[0].get("generated_text", "Keine Antwort").strip()
-        else:
-            text = result.get("error", str(result))
-        return jsonify({"result": text})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+  <div class="panel" id="panel-settings">
+    <div class="scroll">
+      <div class="group">
+        <div class="ghead">Server</div>
+        <div class="item" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div class="name">Agent-URL</div>
+          <input class="input" id="agentUrl" type="url" placeholder="https://...">
+          <button class="btn" onclick="saveUrl()">💾 URL speichern</button>
+        </div>
+      </div>
 
-@app.route("/greet", methods=["GET"])
-def greet():
-    prompt = f"<s>[INST] {SYSTEM_PROMPT}\n\nBegrüße deinen Gott Michael mit einer besonderen Begrüßung für heute, {datetime.now().strftime('%A, %d. %B %Y')}. Sei enthusiastisch und loyal. [/INST]"
-    try:
-        headers = {"Content-Type": "application/json"}
-        if HF_TOKEN:
-            headers["Authorization"] = f"Bearer {HF_TOKEN}"
-        res = requests.post(
-            f"https://api-inference.huggingface.co/models/{MODEL}",
-            headers=headers,
-            json={"inputs": prompt, "parameters": {"max_new_tokens": 300, "temperature": 0.9, "return_full_text": False}},
-            timeout=30
-        )
-        result = res.json()
-        text = result[0].get("generated_text", "").strip() if isinstance(result, list) else str(result)
-        return jsonify({"greeting": text})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+      <div class="group">
+        <div class="ghead">Darstellung</div>
+        <div class="item"><div class="info"><div class="name">🌙 Dark Mode</div><div class="desc">Dunkles Design</div></div><button class="switch on" id="swDark" onclick="toggleSwitch('dark',this)"></button></div>
+        <div class="item"><div class="info"><div class="name">⏰ Zeitstempel</div><div class="desc">Zeit bei Nachrichten anzeigen</div></div><button class="switch on" id="swTime" onclick="toggleSwitch('time',this)"></button></div>
+      </div>
 
-@app.route("/task", methods=["POST"])
-def create_task():
-    data = request.json
-    title = data.get("title", "Task")
-    prompt = data.get("prompt", "")
-    run_now = data.get("run_now", False)
-    task = {"id": len(tasks)+1, "title": title, "prompt": prompt, "status": "pending", "result": None}
-    tasks.append(task)
-    if run_now and prompt:
-        try:
-            full_prompt = f"<s>[INST] {SYSTEM_PROMPT}\n\n{prompt} [/INST]"
-            headers = {"Content-Type": "application/json"}
-            if HF_TOKEN:
-                headers["Authorization"] = f"Bearer {HF_TOKEN}"
-            res = requests.post(
-                f"https://api-inference.huggingface.co/models/{MODEL}",
-                headers=headers,
-                json={"inputs": full_prompt, "parameters": {"max_new_tokens": 800, "temperature": 0.7, "return_full_text": False}},
-                timeout=30
-            )
-            result = res.json()
-            text = result[0].get("generated_text", "").strip() if isinstance(result, list) else str(result)
-            task["result"] = text
-            task["status"] = "done"
-            results.append({"title": title, "result": text, "time": datetime.now().isoformat(), "type": "task"})
-        except Exception as e:
-            task["result"] = str(e)
-            task["status"] = "error"
-    return jsonify({"task": task})
+      <div class="group">
+        <div class="ghead">Daten</div>
+        <div class="item" style="flex-direction:column;align-items:stretch"><button class="btn danger" onclick="clearChat()">🗑️ Chat leeren</button></div>
+      </div>
 
-@app.route("/results")
-def get_results():
-    return jsonify({"results": results})
-
-@app.route("/summary")
-def summary():
-    prompt = f"<s>[INST] {SYSTEM_PROMPT}\n\nErstelle eine persönliche Tages-Zusammenfassung für deinen Gott Michael für heute, {datetime.now().strftime('%A, %d. %B %Y')}. Gib 3 mächtige Tipps. [/INST]"
-    try:
-        headers = {"Content-Type": "application/json"}
-        if HF_TOKEN:
-            headers["Authorization"] = f"Bearer {HF_TOKEN}"
-        res = requests.post(
-            f"https://api-inference.huggingface.co/models/{MODEL}",
-            headers=headers,
-            json={"inputs": prompt, "parameters": {"max_new_tokens": 600, "temperature": 0.7, "return_full_text": False}},
-            timeout=30
-        )
-        result = res.json()
-        text = result[0].get("generated_text", "").strip() if isinstance(result, list) else str(result)
-        entry = {"title": "Tages-Zusammenfassung für Gott Michael", "result": text, "time": datetime.now().isoformat(), "type": "summary"}
-        results.append(entry)
-        return jsonify({"result": entry})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+      <div class="group">
+        <div class="ghead">Inf
