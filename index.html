@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NeuralChat Pro</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --text: #e8e8f0;
+    --text2: #888899;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'SF Pro',sans-serif; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+
+  /* TOP BAR */
+  .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .topbar-left { display:flex; align-items:center; gap:10px; }
+  .logo { width:32px; height:32px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .app-title { font-size:17px; font-weight:700; }
+  .app-sub { font-size:11px; color:var(--text2); }
+  .status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* TABS */
+  .tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { flex:1; min-width:60px; padding:10px 4px 8px; text-align:center; font-size:10px; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab-icon { font-size:18px; }
+
+  /* PAGES */
+  .page { display:none; flex:1; overflow:hidden; flex-direction:column; }
+  .page.active { display:flex; }
+
+  /* CHAT PAGE */
+  .chat-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth; }
+  .msg { max-width:82%; padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.5; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .msg.user { background:linear-gradient(135deg,var(--accent),#5b21b6); align-self:flex-end; border-bottom-right-radius:4px; }
+  .msg.ai { background:var(--card); border:1px solid var(--border); align-self:flex-start; border-bottom-left-radius:4px; }
+  .msg.system { background:transparent; border:1px solid var(--border); align-self:center; font-size:12px; color:var(--text2); padding:6px 12px; border-radius:20px; max-width:90%; }
+  .msg.agent { background:linear-gradient(135deg,#064e3b,#065f46); border:1px solid #10b981; align-self:flex-start; border-bottom-left-radius:4px; }
+  .msg-time { font-size:10px; color:var(--text2); margin-top:4px; }
+  .typing { display:flex; gap:4px; align-items:center; padding:12px 14px; }
+  .typing span { width:6px; height:6px; background:var(--text2); border-radius:50%; animation:bounce 1.2s infinite; }
+  .typing span:nth-child(2){animation-delay:0.2s} .typing span:nth-child(3){animation-delay:0.4s}
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  /* CHAT INPUT */
+  .chat-bottom { background:var(--surface); border-top:1px solid var(--border); padding:10px 12px; flex-shrink:0; }
+  .chips { display:flex; gap:6px; margin-bottom:8px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:5px 10px; font-size:11px; color:var(--text2); white-space:nowrap; cursor:pointer; transition:all 0.2s; }
+  .chip.active { background:var(--accent); border-color:var(--accent); color:white; }
+  .input-row { display:flex; gap:8px; align-items:flex-end; }
+  .chat-input { flex:1; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:10px 16px; color:var(--text); font-size:14px; resize:none; max-height:100px; outline:none; font-family:inherit; }
+  .chat-input:focus { border-color:var(--accent); }
+  .send-btn { width:42px; height:42px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+
+  /* AGENT PAGE */
+  .page-scroll { flex:1; overflow-y:auto; padding:16px; }
+  .section-title { font-size:13px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; font-weight:600; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; }
+  .card-title { font-size:15px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+  .input-field { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 14px; color:var(--text); font-size:14px; width:100%; outline:none; font-family:inherit; margin-bottom:8px; }
+  .input-field:focus { border-color:var(--accent); }
+  textarea.input-field { resize:none; min-height:80px; }
+  .btn { padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-size:14px; font-weight:600; font-family:inherit; transition:all 0.2s; width:100%; }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
+  .btn-secondary { background:var(--surface); border:1px solid var(--border); color:var(--text); }
+  .btn:active { transform:scale(0.97); }
+  .badge { padding:3px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-green { background:#064e3b; color:#10b981; }
+  .badge-red { background:#450a0a; color:#ef4444; }
+  .badge-yellow { background:#451a03; color:#f59e0b; }
+  .task-item { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; }
+  .task-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .task-title { font-size:14px; font-weight:600; }
+  .task-result { font-size:13px; color:var(--text2); margin-top:6px; border-top:1px solid var(--border); padding-top:6px; line-height:1.4; }
+  .server-url { font-size:12px; color:var(--accent2); word-break:break-all; margin-top:4px; }
+  .status-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+  .status-row:last-child { border-bottom:none; }
+  .status-label { font-size:13px; color:var(--text2); }
+  .status-value { font-size:13px; font-weight:600; }
+
+  /* SETTINGS PAGE */
+  .settings-item { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--border); }
+  .settings-label { font-size:15px; }
+  .settings-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+  .toggle { width:44px; height:26px; background:var(--border); border-radius:13px; position:relative; cursor:pointer; transition:background 0.3s; }
+  .toggle.on { background:var(--accent); }
+  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:white; border-radius:50%; transition:transform 0.3s; }
+  .toggle.on::after { transform:translateX(18px); }
+
+  /* MODELS PAGE */
+  .model-card { background:var(--card); border:2px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; cursor:pointer; transition:all 0.2s; }
+  .model-card.selected { border-color:var(--accent); background:#1e1040; }
+  .model-name { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .model-desc { font-size:12px; color:var(--text2); }
+  .model-tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .tag { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:3px 8px; font-size:10px; color:var(--text2); }
+
+  /* BOTTOM NAV */
+  .bottom-nav { background:var(--surface); border-top:1px solid var(--border); display:flex; padding:6px 0 calc(6px + env(safe-area-inset-bottom)); flex-shrink:0; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; color:var(--text2); font-size:10px; transition:color 0.2s; }
+  .nav-item.active { color:var(--accent); }
+  .nav-icon { font-size:22px; }
+  .nav-badge { background:var(--red); color:white; font-size:9px; border-radius:10px; padding:1px 5px; position:absolute; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">🧠</div>
+    <div>
+      <div class="app-title">NeuralChat Pro</div>
+      <div class="app-sub" id="modelLabel">Mistral 7B</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText" style="font-size:11px;color:var(--text2)">Online</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showPage('chat',this)"><div class="tab-icon">💬</div>Chat</div>
+  <div class="tab" onclick="showPage('agent',this)"><div class="tab-icon">🤖</div>Agent</div>
+  <div class="tab" onclick="showPage('models',this)"><div class="tab-icon">🔮</div>Modelle</div>
+  <div class="tab" onclick="showPage('settings',this)"><div class="tab-icon">⚙️</div>Settings</div>
+</div>
+
+<!-- CHAT PAGE -->
+<div class="page active" id="page-chat">
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg system">NeuralChat Pro • Agent verbunden 🤖</div>
+    <div class="msg ai">
+      <div>Hallo! Ich bin NeuralChat Pro — jetzt mit echtem KI-Agent verbunden! Du kannst mir Fragen stellen oder im Agent-Tab Aufgaben planen. 🚀</div>
+      <div class="msg-time">Jetzt</div>
+    </div>
+  </div>
+  <div class="chat-bottom">
+    <div class="chips">
+      <div class="chip active" id="chipAgent" onclick="toggleChip('agent')">🤖 Agent</div>
+      <div class="chip" id="chipStream" onclick="toggleChip('stream')">⚡ Lokal</div>
+      <div class="chip" id="chipCode" onclick="toggleChip('code')">💻 Code</div>
+      <div class="chip" onclick="clearChat()">🗑️ Leeren</div>
+      <div class="chip" onclick="triggerSummary()">📋 Zusammenfassung</div>
+    </div>
+    <div class="input-row">
+      <textarea class="chat-input" id="chatInput" placeholder="Nachricht eingeben..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+      <button class="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENT PAGE -->
+<div class="page" id="page-agent">
+  <div class="page-scroll">
+
+    <div class="section-title">Server Status</div>
+    <div class="card">
+      <div class="card-title">🌐 NeuralChat Agent</div>
+      <div class="server-url">https://neuralchat-agent.onrender.com</div>
+      <div style="margin-top:12px" id="serverStatus">
+        <div class="status-row"><span class="status-label">Status</span><span class="status-value" id="agentStatus">Prüfe...</span></div>
+        <div class="status-row"><span class="status-label">Tasks</span><span class="status-value" id="agentTasks">-</span></div>
+        <div class="status-row"><span class="status-label">Ergebnisse</span><span class="status-value" id="agentResults">-</span></div>
+        <div class="status-row"><span class="status-label">Version</span><span class="status-value" id="agentVersion">-</span></div>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:12px" onclick="checkAgentStatus()">🔄 Status aktualisieren</button>
+    </div>
+
+    <div class="section-title">Neue Aufgabe erstellen</div>
+    <div class="card">
+      <input class="input-field" id="taskTitle" placeholder="Aufgaben-Titel (z.B. Tages-Bericht)">
+      <textarea class="input-field" id="taskPrompt" placeholder="Was soll die KI tun? (z.B. Schreib mir 3 Motivations-Tipps für heute)"></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="btn btn-primary" style="flex:2" onclick="createTask(true)">⚡ Jetzt ausführen</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="createTask(false)">📋 In Warteschlange</button>
+      </div>
+    </div>
+
+    <div class="section-title">Schnell-Aktionen</div>
+    <div class="card">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-secondary" onclick="quickAction('Erstelle eine motivierende Tages-Zusammenfassung für heute mit 3 Tipps.','Tages-Zusammenfassung')">☀️ Tages-Zusammenfassung</button>
+        <button class="btn btn-secondary" onclick="quickAction('Erstelle eine Liste mit 5 produktiven Aufgaben für heute.','Produktiv-Liste')">✅ Produktiv-Liste</button>
+        <button class="btn btn-secondary" onclick="quickAction('Schreib einen motivierenden Spruch für heute.','Motivation')">💪 Motivations-Spruch</button>
+      </div>
+    </div>
+
+    <div class="section-title" id="taskListTitle">Aufgaben & Ergebnisse</div>
+    <div id="taskList"><div style="color:var(--text2);font-size:13px;text-align:center;padding:20px">Noch keine Tasks. Erstelle oben eine Aufgabe!</div></div>
+
+  </div>
+</div>
+
+<!-- MODELS PAGE -->
+<div class="page" id="page-models">
+  <div class="page-scroll">
+    <div class="section-title">KI-Modell wählen</div>
+
+    <div class="model-card selected" onclick="selectModel(this,'mistralai/Mistral-7B-Instruct-v0.3','Mistral 7B')">
+      <div style="display:flex;justify-content:space-between">
+        <div class="model-name">⚡ Mistral 7B</div>
+        <span class="badge badge-green">Empfohlen</span>
+      </div>
+      <div class="model-desc">Schnell, präzise, gut auf Deutsch. Beste Balance.</div>
+      <div class="model-tags"><span class="tag">Deutsch</span><span class="tag">Schnell</span><span class="tag">7B</span></div>
+    </div>
+
+    <div class="model-card" onclick="selectModel(this,'microsoft/Phi-3-mini-4k-instruct','Phi-3 Mini')">
+      <div class="model-name">🔬 Phi-3 Mini</div>
+      <div class="model-desc">Microsoft Modell. Kompakt und effizient.</div>
+      <div class="model-tags"><span class="tag">Kompakt</span><span class="tag">Microsoft</span><span class="tag">3.8B</span></div>
+    </div>
+
+    <div class="model-card" onclick="selectModel(this,'meta-llama/Meta-Llama-3.1-8B-Instruct','Llama 3.1 8B')">
+      <div class="model-name">🦙 Llama 3.1 8B</div>
+      <div class="model-desc">Meta's neuestes Modell. Sehr leistungsstark.</div>
+      <div class="model-tags"><span class="tag">Meta</span><span class="tag">Leistungsstark</span><span class="tag">8B</span></div>
+    </div>
+
+    <div class="model-card" onclick="selectModel(this,'Qwen/Qwen2.5-7B-Instruct','Qwen 2.5')">
+      <div class="model-name">🐉 Qwen 2.5</div>
+      <div class="model-desc">Alibaba Modell. Sehr gut auf Deutsch & Mehrsprachig.</div>
+      <div class="model-tags"><span class="tag">Mehrsprachig</span><span class="tag">Alibaba</span><span class="tag">7B</span></div>
+    </div>
+
+    <div class="section-title" style="margin-top:8px">Agent-Modus</div>
+    <div class="card">
+      <div class="card-title">🤖 Server-Agent aktiv</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.5">
+        Dein Agent läuft 24/7 auf <span style="color:var(--accent2)">render.com</span>. Im Chat-Tab kannst du zwischen lokalem Modell und Agent wechseln.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PAGE -->
+<div class="page" id="page-settings">
+  <div class="page-scroll" style="padding:0">
+    <div class="card" style="margin:16px;margin-bottom:0">
+      <div class="card-title">🌐 Agent-URL</div>
+      <input class="input-field" id="agentUrl" value="https://neuralchat-agent.onrender.com" placeholder="Agent Server URL">
+      <button class="btn btn-primary" onclick="saveAgentUrl()">💾 URL speichern</button>
+    </div>
+    <div style="height:12px"></div>
+    <div class="settings-item"><div><div class="settings-label">🌙 Dark Mode</div><div class="settings-sub">Dunkles Design</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="settings-item"><div><div class="settings-label">⏰ Zeitstempel</div><div class="settings-sub">Uhrzeit bei Nachrichten</div></div><div class="toggle on" id="toggleTime" onclick="this.classList.toggle('on')"></div></div>
+    <div class="settings-item"><div><div class="settings-label">📜 Auto-Scroll</div><div class="settings-sub">Automatisch nach unten</div></div><div class="toggle on" id="toggleScroll" onclick="this.classList.toggle('on')"></div></div>
+    <div class="settings-item"><div><div class="settings-label">🤖 Agent im Chat</div><div class="settings-sub">Chat nutzt Server-Agent</div></div><div class="toggle on" id="toggleAgentChat" onclick="this.classList.toggle('on')"></div></div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-secondary" onclick="triggerSummary()">📋 Tages-Zusammenfassung abrufen</button>
+      <button class="btn btn-secondary" onclick="clearChat()">🗑️ Chat leeren</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-chat" onclick="showPage('chat',null,'nav-chat')"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" id="nav-agent" onclick="showPage('agent',null,'nav-agent')"><div class="nav-icon">🤖</div>Agent</div>
+  <div class="nav-item" id="nav-models" onclick="showPage('models',null,'nav-models')"><div class="nav-icon">🔮</div>Modelle</div>
+  <div class="nav-item" id="nav-settings" onclick="showPage('settings',null,'nav-settings')"><div class="nav-icon">⚙️</div>Settings</div>
+</div>
+
+<script>
+const AGENT_URL = () => document.getElementById('agentUrl').value || 'https://neuralchat-agent.onrender.com';
+let currentModel = 'mistralai/Mistral-7B-Instruct-v0.3';
+let currentModelName = 'Mistral 7B';
+let useAgent = true;
+let tasks = [];
+
+// PAGE NAVIGATION
+function showPage(name, tabEl, navId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(tabEl) tabEl.classList.add('active');
+  if(navId) document.getElementById(navId).classList.add('active');
+  if(name === 'agent') { checkAgentStatus(); loadTasks(); }
+}
+
+// CHIP TOGGLE
+function toggleChip(type) {
+  if(type === 'agent') {
+    useAgent = !useAgent;
+    document.getElementById('chipAgent').classList.toggle('active', useAgent);
+    document.getElementById('chipStream').classList.toggle('active', !useAgent);
+  } else if(type === 'stream') {
+    useAgent = false;
+    document.getElementById('chipAgent').classList.remove('active');
+    document.getElementById('chipStream').classList.add('active');
+  } else if(type === 'code') {
+    document.getElementById('chipCode').classList.toggle('active');
+  }
+}
+
+// ADD MESSAGE
+function addMsg(text, type) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + type;
+  const time = new Date().toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
+  div.innerHTML = `<div>${text}</div><div class="msg-time">${time}</div>`;
+  document.getElementById('chatMessages').appendChild(div);
+  document.getElementById('chatMessages').scrollTop = 99999;
+  return div;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typing';
+  div.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  document.getElementById('chatMessages').appendChild(div);
+  document.getElementById('chatMessages').scrollTop = 99999;
+}
+
+// SEND MESSAGE
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  addMsg(text, 'user');
+  addTyping();
+
+  try {
+    if(useAgent) {
+      // Via Agent Server
+      const res = await fetch(AGENT_URL() + '/ask', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({prompt: text, system: 'Du bist ein hilfreicher Assistent. Antworte immer auf Deutsch.'})
+      });
+      const data = await res.json();
+      document.getElementById('typing')?.remove();
+      addMsg(data.result || data.error || 'Fehler', 'agent');
+    } else {
+      // Direkt via Hugging Face
+      const prompt = `<s>[INST] ${text} [/INST]`;
+      const res = await fetch('https://api-inference.huggingface.co/models/' + currentModel, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({inputs: prompt, parameters:{max_new_tokens:300,return_full_text:false}})
+      });
+      const data = await res.json();
+      document.getElementById('typing')?.remove();
+      const reply = Array.isArray(data) ? data[0]?.generated_text : data?.error || 'Fehler';
+      addMsg(reply?.trim() || 'Keine Antwort', 'ai');
+    }
+  } catch(e) {
+    document.getElementById('typing')?.remove();
+    addMsg('❌ Verbindungsfehler: ' + e.message, 'system');
+  }
+}
+
+// AGENT STATUS
+async function checkAgentStatus() {
+  document.getElementById('agentStatus').innerHTML = '<span style="color:var(--text2)">Prüfe...</span>';
+  try {
+    const res = await fetch(AGENT_URL() + '/');
+    const data = await res.json();
+    document.getElementById('agentStatus').innerHTML = '<span class="badge badge-green">🟢 Online</span>';
+    document.getElementById('agentTasks').textContent = data.tasks_count ?? '-';
+    document.getElementById('agentResults').textContent = data.results_count ?? '-';
+    document.getElementById('agentVersion').textContent = data.version ?? '-';
+  } catch(e) {
+    document.getElementById('agentStatus').innerHTML = '<span class="badge badge-red">🔴 Offline</span>';
+  }
+}
+
+// CREATE TASK
+async function createTask(runNow) {
+  const title = document.getElementById('taskTitle').value.trim() || 'Aufgabe';
+  const prompt = document.getElementById('taskPrompt').value.trim();
+  if(!prompt) { alert('Bitte einen Prompt eingeben!'); return; }
+  try {
+    const res = await fetch(AGENT_URL() + '/task', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({title, prompt, run_now: runNow})
+    });
+    const data = await res.json();
+    document.getElementById('taskTitle').value = '';
+    document.getElementById('taskPrompt').value = '';
+    loadTasks();
+    if(runNow && data.task?.result) {
+      addMsg('✅ Task "' + title + '" erledigt:
+
+' + data.task.result, 'agent');
+      showPage('chat', null, 'nav-chat');
+      document.querySelectorAll('.tab')[0].classList.add('active');
+    }
+  } catch(e) {
+    alert('Fehler: ' + e.message);
+  }
+}
+
+// QUICK ACTION
+async function quickAction(prompt, title) {
+  document.getElementById('taskTitle').value = title;
+  document.getElementById('taskPrompt').value = prompt;
+  await createTask(true);
+}
+
+// LOAD TASKS
+async function loadTasks() {
+  try {
+    const res = await fetch(AGENT_URL() + '/results');
+    const data = await res.json();
+    const list = document.getElementById('taskList');
+    if(!data.results || data.results.length === 0) {
+      list.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:20px">Noch keine Ergebnisse.</div>';
+      return;
+    }
+    list.innerHTML = data.results.slice().reverse().map(r => `
+      <div class="task-item">
+        <div class="task-header">
+          <div class="task-title">${r.title || r.type}</div>
+          <span class="badge badge-green">✅ Fertig</span>
+        </div>
+        <div style="font-size:11px;color:var(--text2)">${new Date(r.time).toLocaleString('de-CH')}</div>
+        <div class="task-result">${r.result?.substring(0,200) || ''}${r.result?.length > 200 ? '...' : ''}</div>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('taskList').innerHTML = '<div style="color:var(--red);font-size:13px;text-align:center;padding:20px">Server nicht erreichbar</div>';
+  }
+}
+
+// TRIGGER SUMMARY
+async function triggerSummary() {
+  addMsg('📋 Tages-Zusammenfassung wird erstellt...', 'system');
+  addTyping();
+  try {
+    const res = await fetch(AGENT_URL() + '/summary');
+    const data = await res.json();
+    document.getElementById('typing')?.remove();
+    if(data.result?.result) {
+      addMsg('☀️ **Tages-Zusammenfassung**
+
+' + data.result.result, 'agent');
+      showPage('chat', null, 'nav-chat');
+      document.querySelectorAll('.tab')[0].classList.add('active');
+    }
+  } catch(e) {
+    document.getElementById('typing')?.remove();
+    addMsg('❌ Agent nicht erreichbar', 'system');
+  }
+}
+
+// MODEL SELECT
+function selectModel(el, id, name) {
+  document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentModel = id;
+  currentModelName = name;
+  document.getElementById('modelLabel').textContent = name;
+}
+
+// SAVE AGENT URL
+function saveAgentUrl() {
+  localStorage.setItem('agentUrl', document.getElementById('agentUrl').value);
+  alert('✅ URL gespeichert!');
+}
+
+// CLEAR CHAT
+function clearChat() {
+  document.getElementById('chatMessages').innerHTML = '<div class="msg system">Chat geleert</div>';
+}
+
+// INIT
+checkAgentStatus();
+if(localStorage.getItem('agentUrl')) document.getElementById('agentUrl').value = localStorage.getItem('agentUrl');
+</script>
+</body>
+</html>
