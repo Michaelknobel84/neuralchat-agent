@@ -72,6 +72,8 @@
 </style>
 </head>
 <body>
+<canvas id="neuralCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.55;pointer-events:none;"></canvas>
+
 <div class="app">
 
   <div class="header">
@@ -327,6 +329,106 @@ document.getElementById('welcomeTime').textContent = t();
 const savedUrl = localStorage.getItem('agentUrl');
 if (savedUrl) document.getElementById('agentUrl').value = savedUrl;
 checkStatus();
+</script>
+<script>
+const canvas = document.getElementById("neuralCanvas");
+const ctx = canvas.getContext("2d");
+let nodes=[], connections=[], pulses=[], W, H;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+resize();
+window.addEventListener("resize",()=>{resize();init();});
+
+class Node{
+  constructor(){
+    this.x=Math.random()*W; this.y=Math.random()*H;
+    this.vx=(Math.random()-0.5)*0.3; this.vy=(Math.random()-0.5)*0.3;
+    this.r=Math.random()*2.5+1; this.alpha=0;
+    this.target=Math.random()*0.7+0.3;
+    this.born=Date.now(); this.delay=Math.random()*4000;
+    this.color=Math.random()>0.6?"#a855f7":"#00f5ff";
+    this.phase=Math.random()*Math.PI*2;
+  }
+  update(now){
+    const age=now-this.born-this.delay;
+    if(age>0) this.alpha=Math.min(this.target,age/1200);
+    this.x+=this.vx; this.y+=this.vy;
+    if(this.x<0||this.x>W)this.vx*=-1;
+    if(this.y<0||this.y>H)this.vy*=-1;
+    this.phase+=0.02;
+  }
+  draw(){
+    if(this.alpha<=0)return;
+    const g=Math.sin(this.phase)*0.3+0.7;
+    ctx.save();
+    const gr=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*5);
+    gr.addColorStop(0,this.color); gr.addColorStop(1,"transparent");
+    ctx.beginPath(); ctx.arc(this.x,this.y,this.r*5,0,Math.PI*2);
+    ctx.fillStyle=gr; ctx.globalAlpha=this.alpha*g*0.2; ctx.fill();
+    ctx.globalAlpha=this.alpha*g;
+    ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle=this.color; ctx.shadowBlur=12; ctx.shadowColor=this.color;
+    ctx.fill(); ctx.restore();
+  }
+}
+
+class Pulse{
+  constructor(a,b){
+    this.ax=a.x;this.ay=a.y;this.bx=b.x;this.by=b.y;
+    this.t=0; this.speed=Math.random()*0.008+0.004;
+    this.color=Math.random()>0.5?"#00f5ff":"#a855f7"; this.done=false;
+  }
+  update(){this.t+=this.speed; if(this.t>=1)this.done=true;}
+  draw(){
+    const x=this.ax+(this.bx-this.ax)*this.t;
+    const y=this.ay+(this.by-this.ay)*this.t;
+    ctx.save(); ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2);
+    ctx.fillStyle=this.color; ctx.shadowBlur=15; ctx.shadowColor=this.color;
+    ctx.globalAlpha=1-this.t*0.3; ctx.fill(); ctx.restore();
+  }
+}
+
+function init(){
+  const count=Math.min(Math.floor(W*H/18000),80);
+  nodes=Array.from({length:count},()=>new Node());
+  connections=[];
+  for(let i=0;i<nodes.length;i++)
+    for(let j=i+1;j<nodes.length;j++){
+      const d=Math.hypot(nodes[j].x-nodes[i].x,nodes[j].y-nodes[i].y);
+      if(d<200) connections.push({a:nodes[i],b:nodes[j],alpha:0,born:Date.now()+Math.random()*3000});
+    }
+}
+init();
+
+let lastP=0;
+function animate(now){
+  ctx.clearRect(0,0,W,H);
+  connections.forEach(c=>{
+    if(now>c.born){
+      c.alpha=Math.min(0.35,(now-c.born)/1500*0.35);
+      const d=Math.hypot(c.b.x-c.a.x,c.b.y-c.a.y);
+      if(d<220){
+        ctx.save();
+        ctx.globalAlpha=c.alpha*(1-d/220)*Math.min(c.a.alpha,c.b.alpha)*2;
+        ctx.beginPath(); ctx.moveTo(c.a.x,c.a.y); ctx.lineTo(c.b.x,c.b.y);
+        ctx.strokeStyle="rgba(0,245,255,0.6)"; ctx.lineWidth=0.5; ctx.stroke();
+        ctx.restore();
+      }
+    }
+  });
+  nodes.forEach(n=>{n.update(now);n.draw();});
+  if(now-lastP>400+Math.random()*600){
+    const active=connections.filter(c=>c.alpha>0.1);
+    if(active.length){
+      const c=active[Math.floor(Math.random()*active.length)];
+      pulses.push(new Pulse(Math.random()>0.5?c.a:c.b, Math.random()>0.5?c.b:c.a));
+    }
+    lastP=now;
+  }
+  pulses.forEach(p=>{p.update();p.draw();});
+  pulses=pulses.filter(p=>!p.done);
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
 </script>
 </body>
 </html>
