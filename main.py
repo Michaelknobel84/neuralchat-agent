@@ -8,26 +8,37 @@ app = Flask(__name__)
 CORS(app)
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-MODEL = "llama3-8b-8192"  # ALT - löschen
 MODEL = "llama-3.3-70b-versatile"
 
-SYSTEM = "Du bist ein persönlicher KI-Assistent Ohne . Antworte immer auf Deutsch, klar, freundlich und präzise."
+SYSTEM = "Du bist ein persönlicher KI-Assistent. Antworte immer auf Deutsch, klar, freundlich und präzise."
 
 tasks = []
 results = []
+conversation_history = []  # 🧠 Memory
 
 def ask_groq(prompt, max_tokens=700):
     try:
+        conversation_history.append({"role": "user", "content": prompt})
+        
         response = client.chat.completions.create(
             model=MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": prompt}
+                *conversation_history
             ],
             max_tokens=max_tokens,
             temperature=0.7
         )
-        return response.choices[0].message.content.strip()
+        
+        answer = response.choices[0].message.content.strip()
+        conversation_history.append({"role": "assistant", "content": answer})
+        
+        # Max 20 Nachrichten merken (Speicher begrenzen)
+        if len(conversation_history) > 20:
+            conversation_history.pop(0)
+            conversation_history.pop(0)
+        
+        return answer
     except Exception as e:
         return f"Fehler: {str(e)}"
 
@@ -44,7 +55,8 @@ def status():
         "results_count": len(results),
         "time": datetime.now().isoformat(),
         "version": "3.0.0",
-        "model": MODEL
+        "model": MODEL,
+        "memory": len(conversation_history)
     })
 
 @app.route("/ask", methods=["POST"])
@@ -56,15 +68,16 @@ def ask():
     result = ask_groq(prompt)
     return jsonify({"result": result})
 
+@app.route("/clear_memory", methods=["POST"])
+def clear_memory():
+    conversation_history.clear()
+    return jsonify({"status": "Memory gelöscht ✅"})
+
 @app.route("/summary")
 def summary():
     prompt = f"Erstelle eine motivierende Tages-Zusammenfassung für heute, {datetime.now().strftime('%A, %d. %B %Y')}. Gib 3 konkrete Tipps für einen produktiven Tag."
     text = ask_groq(prompt, max_tokens=500)
-    entry = {
-        "title": "Tages-Zusammenfassung",
-        "result": text,
-        "time": datetime.now().isoformat()
-    }
+    entry = {"title": "Tages-Zusammenfassung", "result": text, "time": datetime.now().isoformat()}
     results.append(entry)
     return jsonify({"result": entry})
 
