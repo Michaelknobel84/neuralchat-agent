@@ -151,9 +151,24 @@ Knowledge Nodes: {stats["knowledge_nodes"]}
         return f"Fehler: {str(e)}"
 
 
-@app.route("/")
-def index():
-    return send_file("index.html")
+@app.route("/style.css")
+def style():
+    return send_file("style.css")
+
+
+@app.route("/app.js")
+def javascript():
+    return send_file("app.js")
+
+
+@app.route("/manifest.json")
+def manifest():
+    return send_file("manifest.json")
+
+
+@app.route("/sw.js")
+def service_worker():
+    return send_file("sw.js")
 
 
 @app.route("/status")
