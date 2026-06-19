@@ -2,356 +2,120 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>NeuralChat Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuralChat AI</title>
 <style>
-  :root {
-    --bg:#0b0b10; --surface:#13131a; --surface2:#1b1b26; --border:#2a2a3a;
-    --accent:#7c3aed; --accent2:#a855f7; --text:#f4f4f7; --muted:#8b8ba8;
-    --ok:#10b981; --err:#ef4444;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-  .app{max-width:520px;height:100vh;margin:0 auto;display:flex;flex-direction:column}
-  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px}
-  .title{font-size:17px;font-weight:800;line-height:1.1}
-  .subtitle{font-size:12px;color:var(--muted);margin-top:2px}
-  .online{display:flex;align-items:center;gap:7px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.22);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--ok);font-weight:700}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 1.8s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
-  .tab{flex:1;border:none;background:none;color:var(--muted);padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer;position:relative}
-  .tab.active{color:var(--accent2)}
-  .tab.active:after{content:"";position:absolute;left:18%;right:18%;bottom:0;height:2px;background:var(--accent2);border-radius:2px 2px 0 0}
-  .panel{display:none;flex:1;overflow:hidden;flex-direction:column}
-  .panel.active{display:flex}
-  .messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
-  .msgwrap{display:flex;flex-direction:column;max-width:88%}
-  .msgwrap.user{align-self:flex-end;align-items:flex-end}
-  .msgwrap.bot{align-self:flex-start;align-items:flex-start}
-  .bubble{padding:12px 15px;border-radius:18px;font-size:15px;line-height:1.55;word-break:break-word;white-space:pre-wrap}
-  .bubble.user{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-bottom-right-radius:5px}
-  .bubble.bot{background:var(--surface2);border:1px solid var(--border);border-bottom-left-radius:5px}
-  .time{font-size:11px;color:var(--muted);margin-top:4px;padding:0 4px}
-  .inputbar{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 14px;display:flex;gap:10px;align-items:flex-end}
-  textarea{flex:1;resize:none;max-height:110px;min-height:46px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:22px;padding:12px 16px;font:inherit;font-size:15px;outline:none}
-  textarea:focus{border-color:var(--accent2)}
-  .send{width:46px;height:46px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:18px;font-weight:800;cursor:pointer;flex-shrink:0}
-  .send:disabled{opacity:.45;cursor:not-allowed}
-  .scroll{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
-  .card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:15px}
-  .card h3{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
-  .row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
-  .row:last-child{border-bottom:none}
-  .label{font-size:14px;color:var(--muted)}
-  .value{font-size:14px;font-weight:700}
-  .value.ok{color:var(--ok)}
-  .value.err{color:var(--err)}
-  .btn{width:100%;border:none;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-top:8px}
-  .btn.secondary{background:var(--surface);border:1px solid var(--border);color:var(--text)}
-  .btn.danger{background:transparent;border:1px solid rgba(239,68,68,.35);color:var(--err)}
-  .quick{width:100%;text-align:left;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;margin-top:8px;cursor:pointer}
-  .out{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;white-space:pre-wrap;line-height:1.65;color:#d7d7e3;min-height:80px;font-size:14px}
-  .group{background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px}
-  .ghead{padding:12px 15px;border-bottom:1px solid var(--border);font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
-  .item{padding:14px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .item:last-child{border-bottom:none}
-  .info{flex:1}
-  .name{font-size:15px;font-weight:600}
-  .desc{font-size:12px;color:var(--muted);margin-top:2px}
-  .switch{width:48px;height:26px;border:none;border-radius:999px;background:var(--border);position:relative;cursor:pointer;flex-shrink:0}
-  .switch.on{background:var(--accent)}
-  .switch:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
-  .switch.on:after{left:25px}
-  .urlinput{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;outline:none;font-family:inherit}
-  .urlinput:focus{border-color:var(--accent2)}
-  .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:#171722;border:1px solid var(--accent);padding:10px 18px;border-radius:999px;color:var(--accent2);font-size:14px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
-  .toast.show{opacity:1}
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;color:#00f5ff;font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px);background-size:50px 50px;animation:gridMove 20s linear infinite;pointer-events:none;z-index:0;}
+@keyframes gridMove{0%{transform:translateY(0);}100%{transform:translateY(50px);}}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:1;}
+#neuralCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.55;pointer-events:none;}
+.container{max-width:900px;margin:0 auto;padding:20px;position:relative;z-index:2;}
+header{text-align:center;padding:30px 0 20px;}
+.logo{font-family:'Orbitron',monospace;font-size:2.5em;font-weight:900;letter-spacing:8px;background:linear-gradient(90deg,#00f5ff,#a855f7,#00f5ff);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite;}
+@keyframes shimmer{0%{background-position:0%;}100%{background-position:200%;}}
+.subtitle{font-size:0.85em;letter-spacing:4px;color:rgba(0,245,255,0.5);margin-top:5px;text-transform:uppercase;}
+.status-bar{display:flex;justify-content:center;gap:20px;margin-top:15px;flex-wrap:wrap;}
+.status-item{font-size:0.75em;letter-spacing:2px;color:rgba(0,245,255,0.6);display:flex;align-items:center;gap:6px;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#00f5ff;box-shadow:0 0 8px #00f5ff;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.8);}}
+.chat-window{background:rgba(0,0,0,0.6);border:1px solid rgba(0,245,255,0.15);border-radius:4px;height:420px;overflow-y:auto;padding:20px;margin:20px 0;position:relative;scroll-behavior:smooth;backdrop-filter:blur(6px);}
+.chat-window::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00f5ff,#a855f7,transparent);animation:scanline 3s ease-in-out infinite;}
+@keyframes scanline{0%,100%{opacity:0.3;}50%{opacity:1;}}
+.chat-window::-webkit-scrollbar{width:4px;}
+.chat-window::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.3);border-radius:2px;}
+.message{margin-bottom:20px;animation:fadeIn 0.4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.message-header{font-size:0.7em;letter-spacing:3px;margin-bottom:6px;text-transform:uppercase;}
+.user-header{color:#a855f7;}
+.ai-header{color:#00f5ff;}
+.message-bubble{padding:12px 16px;border-radius:2px;line-height:1.6;font-size:0.95em;}
+.user-bubble{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-left:3px solid #a855f7;margin-left:20px;color:rgba(255,255,255,0.85);}
+.ai-bubble{background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.15);border-left:3px solid #00f5ff;margin-right:20px;color:rgba(0,245,255,0.9);}
+.typing{display:flex;align-items:center;gap:6px;padding:12px 16px;border:1px solid rgba(0,245,255,0.15);border-left:3px solid #00f5ff;background:rgba(0,245,255,0.04);margin-right:20px;width:fit-content;}
+.typing span{width:6px;height:6px;border-radius:50%;background:#00f5ff;box-shadow:0 0 6px #00f5ff;animation:bounce 1.2s ease-in-out infinite;}
+.typing span:nth-child(2){animation-delay:0.2s;}
+.typing span:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{0%,100%{transform:translateY(0);opacity:0.4;}50%{transform:translateY(-6px);opacity:1;}}
+.input-area{display:flex;gap:10px;align-items:flex-end;}
+.input-wrapper{flex:1;position:relative;}
+.input-wrapper::before{content:'> ';position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(0,245,255,0.4);font-family:'Orbitron',monospace;font-size:0.8em;pointer-events:none;}
+textarea{width:100%;background:rgba(0,0,0,0.7);border:1px solid rgba(0,245,255,0.2);border-radius:2px;color:#fff;padding:14px 14px 14px 32px;font-family:'Rajdhani',sans-serif;font-size:1em;resize:none;outline:none;transition:border-color 0.3s,box-shadow 0.3s;min-height:52px;max-height:120px;backdrop-filter:blur(6px);}
+textarea:focus{border-color:rgba(0,245,255,0.5);box-shadow:0 0 20px rgba(0,245,255,0.08);}
+textarea::placeholder{color:rgba(0,245,255,0.25);letter-spacing:1px;}
+.btn-send{background:transparent;border:1px solid rgba(0,245,255,0.4);color:#00f5ff;padding:14px 24px;font-family:'Orbitron',monospace;font-size:0.75em;letter-spacing:2px;cursor:pointer;border-radius:2px;transition:all 0.3s;text-transform:uppercase;white-space:nowrap;}
+.btn-send:hover{background:rgba(0,245,255,0.1);box-shadow:0 0 20px rgba(0,245,255,0.2);border-color:#00f5ff;}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.btn-action{background:transparent;border:1px solid rgba(168,85,247,0.3);color:rgba(168,85,247,0.8);padding:8px 16px;font-family:'Orbitron',monospace;font-size:0.65em;letter-spacing:2px;cursor:pointer;border-radius:2px;transition:all 0.3s;text-transform:uppercase;}
+.btn-action:hover{background:rgba(168,85,247,0.1);border-color:#a855f7;box-shadow:0 0 15px rgba(168,85,247,0.2);color:#a855f7;}
+.corner-decoration{position:fixed;width:80px;height:80px;opacity:0.3;z-index:3;}
+.corner-tl{top:20px;left:20px;border-top:2px solid #00f5ff;border-left:2px solid #00f5ff;}
+.corner-tr{top:20px;right:20px;border-top:2px solid #00f5ff;border-right:2px solid #00f5ff;}
+.corner-bl{bottom:20px;left:20px;border-bottom:2px solid #a855f7;border-left:2px solid #a855f7;}
+.corner-br{bottom:20px;right:20px;border-bottom:2px solid #a855f7;border-right:2px solid #a855f7;}
+.welcome{text-align:center;padding:40px 20px;color:rgba(0,245,255,0.3);}
+.welcome .icon{font-size:3em;margin-bottom:15px;display:block;}
+.welcome p{font-family:'Orbitron',monospace;font-size:0.75em;letter-spacing:3px;line-height:2;}
+@media(max-width:600px){.logo{font-size:1.6em;letter-spacing:4px;}.chat-window{height:340px;}.btn-send{padding:14px 16px;}}
 </style>
 </head>
 <body>
-<canvas id="neuralCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.55;pointer-events:none;"></canvas>
-
-<div class="app">
-
-  <div class="header">
-    <div class="brand">
-      <div class="logo">🧠</div>
-      <div>
-        <div class="title">NeuralChat Pro</div>
-        <div class="subtitle">Mistral 7B</div>
-      </div>
+<canvas id="neuralCanvas"></canvas>
+<div class="corner-decoration corner-tl"></div>
+<div class="corner-decoration corner-tr"></div>
+<div class="corner-decoration corner-bl"></div>
+<div class="corner-decoration corner-br"></div>
+<div class="container">
+  <header>
+    <div class="logo">NEURALCHAT</div>
+    <div class="subtitle">Advanced AI Interface v3.0</div>
+    <div class="status-bar">
+      <div class="status-item"><div class="status-dot"></div> SYSTEM ONLINE</div>
+      <div class="status-item"><div class="status-dot"></div> NEURAL CORE ACTIVE</div>
+      <div class="status-item"><div class="status-dot"></div> MEMORY ENABLED</div>
     </div>
-    <div class="online">
-      <span class="dot" id="dot"></span>
-      <span id="statusTop">Online</span>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('chat',this)">💬<br>Chat</button>
-    <button class="tab" onclick="switchTab('agent',this)">🤖<br>Agent</button>
-    <button class="tab" onclick="switchTab('settings',this)">⚙️<br>Settings</button>
-  </div>
-
-  <div class="panel active" id="panel-chat">
-    <div class="messages" id="messages">
-      <div class="msgwrap bot">
-        <div class="bubble bot">Willkommen zurück 👑
-Ich bin bereit. Wie kann ich dir helfen?</div>
-        <div class="time" id="welcomeTime"></div>
-      </div>
-    </div>
-    <div class="inputbar">
-      <textarea id="input" rows="1" placeholder="Schreib eine Nachricht..."
-        oninput="resizeInput(this)"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}">
-      </textarea>
-      <button class="send" id="sendBtn" onclick="sendMessage()">➤</button>
+  </header>
+  <div class="chat-window" id="chatWindow">
+    <div class="welcome">
+      <span class="icon">⬡</span>
+      <p>NEURAL INTERFACE BEREIT<br>BEGINNE KOMMUNIKATION</p>
     </div>
   </div>
-
-  <div class="panel" id="panel-agent">
-    <div class="scroll">
-      <div class="card">
-        <h3>Server Status</h3>
-        <div class="row"><div class="label">Status</div><div class="value ok" id="aStatus">Prüfe...</div></div>
-        <div class="row"><div class="label">Agent</div><div class="value" id="aAgent">-</div></div>
-        <div class="row"><div class="label">Tasks</div><div class="value" id="aTasks">-</div></div>
-        <div class="row"><div class="label">Version</div><div class="value" id="aVersion">-</div></div>
-        <button class="btn secondary" onclick="checkStatus()">🔄 Status aktualisieren</button>
-      </div>
-      <div class="card">
-        <h3>Schnell-Aktionen</h3>
-        <button class="quick" onclick="quickAsk('Gib mir 5 konkrete Produktivitätstipps für heute.')">✅ Produktivitätstipps</button>
-        <button class="quick" onclick="quickAsk('Gib mir einen kurzen, starken Motivationsspruch auf Deutsch.')">💪 Motivation</button>
-        <button class="quick" onclick="quickAsk('Generiere 5 kreative Ideen für ein kleines Online-Projekt.')">💡 Ideen generieren</button>
-        <button class="quick" onclick="getSummary()">☀️ Tages-Zusammenfassung</button>
-      </div>
-      <div class="card">
-        <h3>Ergebnis</h3>
-        <div class="out" id="resultBox">Wähle eine Aktion aus.</div>
-      </div>
+  <div class="input-area">
+    <div class="input-wrapper">
+      <textarea id="userInput" placeholder="Nachricht eingeben..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
     </div>
+    <button class="btn-send" onclick="sendMessage()">SENDEN</button>
   </div>
-
-  <div class="panel" id="panel-settings">
-    <div class="scroll">
-      <div class="group">
-        <div class="ghead">Server</div>
-        <div class="item" style="flex-direction:column;align-items:stretch;gap:10px;">
-          <div class="name">Agent-URL</div>
-          <input class="urlinput" id="agentUrl" type="url" placeholder="https://neuralchat-agent.onrender.com">
-          <button class="btn" onclick="saveUrl()">💾 URL speichern</button>
-        </div>
-      </div>
-      <div class="group">
-        <div class="ghead">Darstellung</div>
-        <div class="item">
-          <div class="info"><div class="name">🌙 Dark Mode</div><div class="desc">Dunkles Design</div></div>
-          <button class="switch on" id="swDark" onclick="toggleSwitch('dark',this)"></button>
-        </div>
-        <div class="item">
-          <div class="info"><div class="name">⏰ Zeitstempel</div><div class="desc">Zeit bei Nachrichten</div></div>
-          <button class="switch on" id="swTime" onclick="toggleSwitch('time',this)"></button>
-        </div>
-      </div>
-      <div class="group">
-        <div class="ghead">Daten</div>
-        <div class="item" style="flex-direction:column;align-items:stretch;">
-          <button class="btn danger" onclick="clearChat()">🗑️ Chat leeren</button>
-        </div>
-      </div>
-      <div class="group">
-        <div class="ghead">Info</div>
-        <div class="item"><div class="info"><div class="name">NeuralChat Pro</div><div class="desc">Version 2.0 — Powered by Mistral 7B</div></div></div>
-        <div class="item"><div class="info"><div class="name">Render Server</div><div class="desc">neuralchat-agent.onrender.com</div></div></div>
-      </div>
-    </div>
+  <div class="actions">
+    <button class="btn-action" onclick="clearMemory()">⟳ MEMORY RESET</button>
+    <button class="btn-action" onclick="getSummary()">◈ TAGES-BRIEF</button>
+    <button class="btn-action" onclick="clearChat()">✕ CHAT LEEREN</button>
   </div>
-
 </div>
-<div class="toast" id="toast"></div>
-
 <script>
-const DEFAULT = 'https://neuralchat-agent.onrender.com';
-const api = () => (localStorage.getItem('agentUrl') || DEFAULT).replace(/\/$/, '');
-const t = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2200);
-}
-
-function switchTab(name, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  btn.classList.add('active');
-  if (name === 'agent') checkStatus();
-}
-
-function resizeInput(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
-}
-
-function addMsg(text, type) {
-  const wrap = document.createElement('div');
-  wrap.className = 'msgwrap ' + (type === 'user' ? 'user' : 'bot');
-  const b = document.createElement('div');
-  b.className = 'bubble ' + type;
-  b.textContent = text;
-  const tm = document.createElement('div');
-  tm.className = 'time';
-  tm.textContent = t();
-  wrap.appendChild(b);
-  wrap.appendChild(tm);
-  const msgs = document.getElementById('messages');
-  msgs.appendChild(wrap);
-  msgs.scrollTop = 1e9;
-  return wrap;
-}
-
-function addLoading() {
-  const wrap = document.createElement('div');
-  wrap.className = 'msgwrap bot';
-  const b = document.createElement('div');
-  b.className = 'bubble bot';
-  b.innerHTML = '⏳ Antwort kommt...';
-  const tm = document.createElement('div');
-  tm.className = 'time';
-  tm.textContent = t();
-  wrap.appendChild(b);
-  wrap.appendChild(tm);
-  document.getElementById('messages').appendChild(wrap);
-  document.getElementById('messages').scrollTop = 1e9;
-  return wrap;
-}
-
-async function sendMessage() {
-  const inp = document.getElementById('input');
-  const text = inp.value.trim();
-  if (!text) return;
-  inp.value = '';
-  resizeInput(inp);
-  document.getElementById('sendBtn').disabled = true;
-  addMsg(text, 'user');
-  const loader = addLoading();
-  try {
-    const res = await fetch(api() + '/ask', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({prompt: text})
-    });
-    const d = await res.json();
-    loader.remove();
-    addMsg(d.result || d.error || 'Keine Antwort.', 'bot');
-  } catch (e) {
-    loader.remove();
-    addMsg('Verbindungsfehler. Prüfe Settings → Agent-URL.', 'bot');
-  }
-  document.getElementById('sendBtn').disabled = false;
-}
-
-async function checkStatus() {
-  try {
-    const res = await fetch(api() + '/status');
-    const d = await res.json();
-    document.getElementById('aStatus').textContent = d.status || 'online';
-    document.getElementById('aStatus').className = 'value ok';
-    document.getElementById('aAgent').textContent = d.agent || '-';
-    document.getElementById('aTasks').textContent = d.tasks_count ?? '0';
-    document.getElementById('aVersion').textContent = d.version || '-';
-    document.getElementById('statusTop').textContent = 'Online';
-    document.getElementById('dot').style.background = 'var(--ok)';
-  } catch (e) {
-    document.getElementById('aStatus').textContent = 'Offline';
-    document.getElementById('aStatus').className = 'value err';
-    document.getElementById('statusTop').textContent = 'Offline';
-    document.getElementById('dot').style.background = 'var(--err)';
-  }
-}
-
-async function quickAsk(prompt) {
-  document.getElementById('resultBox').textContent = '⏳ Wird bearbeitet...';
-  try {
-    const res = await fetch(api() + '/ask', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({prompt})
-    });
-    const d = await res.json();
-    document.getElementById('resultBox').textContent = d.result || d.error || 'Fehler';
-  } catch (e) {
-    document.getElementById('resultBox').textContent = 'Fehler: ' + e.message;
-  }
-}
-
-async function getSummary() {
-  document.getElementById('resultBox').textContent = '⏳ Zusammenfassung wird erstellt...';
-  try {
-    const res = await fetch(api() + '/summary');
-    const d = await res.json();
-    document.getElementById('resultBox').textContent = d.result?.result || d.error || 'Fehler';
-  } catch (e) {
-    document.getElementById('resultBox').textContent = 'Fehler: ' + e.message;
-  }
-}
-
-function saveUrl() {
-  const u = document.getElementById('agentUrl').value.trim();
-  if (!u.startsWith('http')) { toast('❌ Ungültige URL!'); return; }
-  localStorage.setItem('agentUrl', u);
-  toast('✅ URL gespeichert!');
-  checkStatus();
-}
-
-function toggleSwitch(key, el) {
-  el.classList.toggle('on');
-  localStorage.setItem('sw-' + key, el.classList.contains('on') ? '1' : '0');
-}
-
-function clearChat() {
-  if (confirm('Chat wirklich löschen?')) {
-    document.getElementById('messages').innerHTML = '';
-    addMsg('Chat geleert. Wie kann ich helfen? 👑', 'bot');
-    toast('🗑️ Chat geleert');
-  }
-}
-
-// Init
-document.getElementById('welcomeTime').textContent = t();
-const savedUrl = localStorage.getItem('agentUrl');
-if (savedUrl) document.getElementById('agentUrl').value = savedUrl;
-checkStatus();
-</script>
-<script>
-const canvas = document.getElementById("neuralCanvas");
-const ctx = canvas.getContext("2d");
-let nodes=[], connections=[], pulses=[], W, H;
+const canvas=document.getElementById("neuralCanvas");
+const ctx=canvas.getContext("2d");
+let nodes=[],connections=[],pulses=[],W,H;
 function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
 resize();
 window.addEventListener("resize",()=>{resize();init();});
-
 class Node{
   constructor(){
-    this.x=Math.random()*W; this.y=Math.random()*H;
-    this.vx=(Math.random()-0.5)*0.3; this.vy=(Math.random()-0.5)*0.3;
-    this.r=Math.random()*2.5+1; this.alpha=0;
+    this.x=Math.random()*W;this.y=Math.random()*H;
+    this.vx=(Math.random()-0.5)*0.3;this.vy=(Math.random()-0.5)*0.3;
+    this.r=Math.random()*2.5+1;this.alpha=0;
     this.target=Math.random()*0.7+0.3;
-    this.born=Date.now(); this.delay=Math.random()*4000;
+    this.born=Date.now();this.delay=Math.random()*4000;
     this.color=Math.random()>0.6?"#a855f7":"#00f5ff";
     this.phase=Math.random()*Math.PI*2;
   }
   update(now){
     const age=now-this.born-this.delay;
-    if(age>0) this.alpha=Math.min(this.target,age/1200);
-    this.x+=this.vx; this.y+=this.vy;
+    if(age>0)this.alpha=Math.min(this.target,age/1200);
+    this.x+=this.vx;this.y+=this.vy;
     if(this.x<0||this.x>W)this.vx*=-1;
     if(this.y<0||this.y>H)this.vy*=-1;
     this.phase+=0.02;
@@ -361,32 +125,30 @@ class Node{
     const g=Math.sin(this.phase)*0.3+0.7;
     ctx.save();
     const gr=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*5);
-    gr.addColorStop(0,this.color); gr.addColorStop(1,"transparent");
-    ctx.beginPath(); ctx.arc(this.x,this.y,this.r*5,0,Math.PI*2);
-    ctx.fillStyle=gr; ctx.globalAlpha=this.alpha*g*0.2; ctx.fill();
+    gr.addColorStop(0,this.color);gr.addColorStop(1,"transparent");
+    ctx.beginPath();ctx.arc(this.x,this.y,this.r*5,0,Math.PI*2);
+    ctx.fillStyle=gr;ctx.globalAlpha=this.alpha*g*0.2;ctx.fill();
     ctx.globalAlpha=this.alpha*g;
-    ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-    ctx.fillStyle=this.color; ctx.shadowBlur=12; ctx.shadowColor=this.color;
-    ctx.fill(); ctx.restore();
+    ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle=this.color;ctx.shadowBlur=12;ctx.shadowColor=this.color;
+    ctx.fill();ctx.restore();
   }
 }
-
 class Pulse{
   constructor(a,b){
     this.ax=a.x;this.ay=a.y;this.bx=b.x;this.by=b.y;
-    this.t=0; this.speed=Math.random()*0.008+0.004;
-    this.color=Math.random()>0.5?"#00f5ff":"#a855f7"; this.done=false;
+    this.t=0;this.speed=Math.random()*0.008+0.004;
+    this.color=Math.random()>0.5?"#00f5ff":"#a855f7";this.done=false;
   }
-  update(){this.t+=this.speed; if(this.t>=1)this.done=true;}
+  update(){this.t+=this.speed;if(this.t>=1)this.done=true;}
   draw(){
     const x=this.ax+(this.bx-this.ax)*this.t;
     const y=this.ay+(this.by-this.ay)*this.t;
-    ctx.save(); ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2);
-    ctx.fillStyle=this.color; ctx.shadowBlur=15; ctx.shadowColor=this.color;
-    ctx.globalAlpha=1-this.t*0.3; ctx.fill(); ctx.restore();
+    ctx.save();ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);
+    ctx.fillStyle=this.color;ctx.shadowBlur=15;ctx.shadowColor=this.color;
+    ctx.globalAlpha=1-this.t*0.3;ctx.fill();ctx.restore();
   }
 }
-
 function init(){
   const count=Math.min(Math.floor(W*H/18000),80);
   nodes=Array.from({length:count},()=>new Node());
@@ -394,11 +156,10 @@ function init(){
   for(let i=0;i<nodes.length;i++)
     for(let j=i+1;j<nodes.length;j++){
       const d=Math.hypot(nodes[j].x-nodes[i].x,nodes[j].y-nodes[i].y);
-      if(d<200) connections.push({a:nodes[i],b:nodes[j],alpha:0,born:Date.now()+Math.random()*3000});
+      if(d<200)connections.push({a:nodes[i],b:nodes[j],alpha:0,born:Date.now()+Math.random()*3000});
     }
 }
 init();
-
 let lastP=0;
 function animate(now){
   ctx.clearRect(0,0,W,H);
@@ -409,8 +170,8 @@ function animate(now){
       if(d<220){
         ctx.save();
         ctx.globalAlpha=c.alpha*(1-d/220)*Math.min(c.a.alpha,c.b.alpha)*2;
-        ctx.beginPath(); ctx.moveTo(c.a.x,c.a.y); ctx.lineTo(c.b.x,c.b.y);
-        ctx.strokeStyle="rgba(0,245,255,0.6)"; ctx.lineWidth=0.5; ctx.stroke();
+        ctx.beginPath();ctx.moveTo(c.a.x,c.a.y);ctx.lineTo(c.b.x,c.b.y);
+        ctx.strokeStyle="rgba(0,245,255,0.6)";ctx.lineWidth=0.5;ctx.stroke();
         ctx.restore();
       }
     }
@@ -420,7 +181,7 @@ function animate(now){
     const active=connections.filter(c=>c.alpha>0.1);
     if(active.length){
       const c=active[Math.floor(Math.random()*active.length)];
-      pulses.push(new Pulse(Math.random()>0.5?c.a:c.b, Math.random()>0.5?c.b:c.a));
+      pulses.push(new Pulse(Math.random()>0.5?c.a:c.b,Math.random()>0.5?c.b:c.a));
     }
     lastP=now;
   }
@@ -429,6 +190,56 @@ function animate(now){
   requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
+const chatWindow=document.getElementById("chatWindow");
+const userInput=document.getElementById("userInput");
+let firstMessage=true;
+function addMessage(role,text){
+  if(firstMessage){chatWindow.innerHTML="";firstMessage=false;}
+  const msg=document.createElement("div");
+  msg.className="message";
+  const isUser=role==="user";
+  msg.innerHTML='<div class="message-header '+(isUser?"user-header":"ai-header")+'">'+(isUser?"◈ USER INPUT":"⬡ NEURAL RESPONSE")+'</div><div class="message-bubble '+(isUser?"user-bubble":"ai-bubble")+'">'+text+'</div>';
+  chatWindow.appendChild(msg);
+  chatWindow.scrollTop=chatWindow.scrollHeight;
+}
+function showTyping(){
+  const t=document.createElement("div");
+  t.id="typing";t.className="message";
+  t.innerHTML='<div class="message-header ai-header">⬡ PROCESSING...</div><div class="typing"><span></span><span></span><span></span></div>';
+  chatWindow.appendChild(t);
+  chatWindow.scrollTop=chatWindow.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById("typing");if(t)t.remove();}
+async function sendMessage(){
+  const text=userInput.value.trim();
+  if(!text)return;
+  addMessage("user",text);
+  userInput.value="";userInput.style.height="auto";
+  showTyping();
+  try{
+    const res=await fetch("/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
+    const data=await res.json();
+    removeTyping();
+    addMessage("ai",data.result||data.error);
+  }catch(e){removeTyping();addMessage("ai","VERBINDUNGSFEHLER — SYSTEM NICHT ERREICHBAR");}
+}
+async function clearMemory(){
+  await fetch("/clear_memory",{method:"POST"});
+  addMessage("ai","⟳ MEMORY ERFOLGREICH ZURÜCKGESETZT");
+}
+async function getSummary(){
+  showTyping();
+  try{
+    const res=await fetch("/summary");
+    const data=await res.json();
+    removeTyping();
+    addMessage("ai",data.result.result);
+  }catch(e){removeTyping();addMessage("ai","FEHLER BEIM LADEN");}
+}
+function clearChat(){
+  chatWindow.innerHTML='<div class="welcome"><span class="icon">⬡</span><p>SYSTEM ZURÜCKGESETZT<br>BEREIT FÜR NEUE MISSION</p></div>';
+  firstMessage=true;
+}
 </script>
 </body>
 </html>
