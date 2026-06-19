@@ -4,7 +4,11 @@ from datetime import datetime
 from groq import Groq
 import os
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_folder=".",
+    static_url_path=""
+)
 CORS(app)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
