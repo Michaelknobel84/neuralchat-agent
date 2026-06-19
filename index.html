@@ -1,456 +1,212 @@
-
-html = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NeuralChat AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NEURAL — AI Core</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#000;color:#00f5ff;font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:linear-gradient(rgba(0,245,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.02) 1px,transparent 1px);background-size:50px 50px;animation:gridMove 20s linear infinite;pointer-events:none;z-index:0;}
-@keyframes gridMove{0%{transform:translateY(0);}100%{transform:translateY(50px);}}
-#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.4;pointer-events:none;}
-.app{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;}
-
-/* TOP BAR */
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:1px solid rgba(0,245,255,0.1);font-family:'Orbitron',monospace;font-size:0.65em;letter-spacing:2px;flex-wrap:wrap;gap:8px;}
-.topbar-left,.topbar-right{display:flex;gap:16px;align-items:center;}
-.tb-item{color:rgba(0,245,255,0.5);}
-.tb-item span{color:#00f5ff;}
-.status-online{color:#00ff88;display:flex;align-items:center;gap:5px;}
-.status-online::before{content:'';width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-
-/* MAIN LAYOUT */
-.main{display:flex;flex:1;gap:0;}
-.sidebar{width:220px;min-width:220px;border-right:1px solid rgba(0,245,255,0.08);padding:12px;display:flex;flex-direction:column;gap:10px;}
-.center{flex:1;display:flex;flex-direction:column;align-items:center;padding:16px;}
-.sidebar-right{width:220px;min-width:220px;border-left:1px solid rgba(0,245,255,0.08);padding:12px;display:flex;flex-direction:column;gap:10px;}
-
-/* PANELS */
-.panel{background:rgba(0,10,30,0.7);border:1px solid rgba(0,245,255,0.1);border-radius:4px;padding:12px;position:relative;overflow:hidden;}
-.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00f5ff,transparent);opacity:0.4;}
-.panel-title{font-family:'Orbitron',monospace;font-size:0.6em;letter-spacing:2px;color:rgba(0,245,255,0.5);margin-bottom:8px;text-transform:uppercase;}
-.panel-value{font-family:'Orbitron',monospace;font-size:1.4em;font-weight:700;color:#00f5ff;text-shadow:0 0 10px rgba(0,245,255,0.5);}
-.panel-sub{font-size:0.75em;color:rgba(0,245,255,0.4);margin-top:4px;letter-spacing:1px;}
-.panel-status{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:0.7em;letter-spacing:1px;}
-.dot-green{width:5px;height:5px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;animation:pulse 2s infinite;}
-.dot-cyan{width:5px;height:5px;border-radius:50%;background:#00f5ff;box-shadow:0 0 6px #00f5ff;animation:pulse 1.5s infinite;}
-.dot-purple{width:5px;height:5px;border-radius:50%;background:#a855f7;box-shadow:0 0 6px #a855f7;animation:pulse 1.8s infinite;}
-
-/* MINI GRAPH */
-.mini-graph{display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:8px;}
-.mini-bar{width:6px;background:rgba(0,245,255,0.4);border-radius:1px;transition:height 0.5s ease;}
-.mini-wave{width:100%;height:25px;margin-top:6px;}
-
-/* SPHERE */
-.sphere-container{position:relative;width:280px;height:280px;margin:10px auto;}
-#sphereCanvas{width:280px;height:280px;}
-.sphere-label{text-align:center;font-family:'Orbitron',monospace;font-size:0.8em;letter-spacing:4px;color:#00f5ff;margin-top:6px;}
-.sphere-pct{font-family:'Orbitron',monospace;font-size:1.8em;font-weight:900;text-align:center;background:linear-gradient(90deg,#00f5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.sphere-ring{position:absolute;border-radius:50%;border:1px solid rgba(0,245,255,0.15);animation:ringRotate 8s linear infinite;}
-.ring1{width:320px;height:320px;top:-20px;left:-20px;border-color:rgba(0,245,255,0.1);}
-.ring2{width:360px;height:360px;top:-40px;left:-40px;border-color:rgba(168,85,247,0.08);animation-duration:12s;animation-direction:reverse;}
-@keyframes ringRotate{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-
-/* SYSTEM MESSAGE */
-.sys-msg{background:rgba(0,10,30,0.8);border:1px solid rgba(0,245,255,0.15);border-radius:4px;padding:12px 16px;margin-top:12px;width:100%;max-width:500px;}
-.sys-msg-title{font-size:0.65em;letter-spacing:2px;color:rgba(0,245,255,0.4);margin-bottom:5px;font-family:'Orbitron',monospace;}
-.sys-msg-text{font-size:0.85em;color:rgba(0,245,255,0.7);letter-spacing:1px;line-height:1.5;}
-
-/* CHAT */
-.chat-section{width:100%;max-width:500px;margin-top:12px;}
-.chat-window{background:rgba(0,5,20,0.8);border:1px solid rgba(0,245,255,0.12);border-radius:4px;height:200px;overflow-y:auto;padding:14px;position:relative;scroll-behavior:smooth;backdrop-filter:blur(6px);}
-.chat-window::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00f5ff,#a855f7,transparent);animation:scanline 3s ease-in-out infinite;}
-@keyframes scanline{0%,100%{opacity:0.3;}50%{opacity:1;}}
-.chat-window::-webkit-scrollbar{width:3px;}
-.chat-window::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.2);border-radius:2px;}
-.message{margin-bottom:14px;animation:fadeIn 0.4s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-.message-header{font-size:0.65em;letter-spacing:3px;margin-bottom:4px;text-transform:uppercase;font-family:'Orbitron',monospace;}
-.user-header{color:#a855f7;}.ai-header{color:#00f5ff;}
-.message-bubble{padding:10px 14px;border-radius:2px;line-height:1.6;font-size:0.9em;}
-.user-bubble{background:rgba(168,85,247,0.07);border:1px solid rgba(168,85,247,0.2);border-left:2px solid #a855f7;margin-left:16px;color:rgba(255,255,255,0.8);}
-.ai-bubble{background:rgba(0,245,255,0.03);border:1px solid rgba(0,245,255,0.12);border-left:2px solid #00f5ff;margin-right:16px;color:rgba(0,245,255,0.85);}
-.typing{display:flex;align-items:center;gap:5px;padding:10px 14px;border:1px solid rgba(0,245,255,0.12);border-left:2px solid #00f5ff;margin-right:16px;width:fit-content;}
-.typing span{width:5px;height:5px;border-radius:50%;background:#00f5ff;box-shadow:0 0 5px #00f5ff;animation:bounce 1.2s ease-in-out infinite;}
-.typing span:nth-child(2){animation-delay:0.2s;}.typing span:nth-child(3){animation-delay:0.4s;}
-@keyframes bounce{0%,100%{transform:translateY(0);opacity:0.3;}50%{transform:translateY(-5px);opacity:1;}}
-
-/* INPUT */
-.input-row{display:flex;gap:8px;margin-top:10px;width:100%;max-width:500px;}
-.input-wrap{flex:1;position:relative;}
-.input-wrap::before{content:'>';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(0,245,255,0.35);font-family:'Orbitron',monospace;font-size:0.75em;pointer-events:none;}
-textarea{width:100%;background:rgba(0,5,20,0.8);border:1px solid rgba(0,245,255,0.18);border-radius:2px;color:#fff;padding:12px 12px 12px 26px;font-family:'Rajdhani',sans-serif;font-size:0.95em;resize:none;outline:none;transition:border-color 0.3s;min-height:46px;max-height:100px;}
-textarea:focus{border-color:rgba(0,245,255,0.45);box-shadow:0 0 15px rgba(0,245,255,0.06);}
-textarea::placeholder{color:rgba(0,245,255,0.2);letter-spacing:1px;}
-.btn-send{background:transparent;border:1px solid rgba(0,245,255,0.35);color:#00f5ff;padding:12px 20px;font-family:'Orbitron',monospace;font-size:0.7em;letter-spacing:2px;cursor:pointer;border-radius:2px;transition:all 0.3s;white-space:nowrap;}
-.btn-send:hover{background:rgba(0,245,255,0.08);box-shadow:0 0 15px rgba(0,245,255,0.15);border-color:#00f5ff;}
-
-/* ACTION BUTTONS */
-.actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;width:100%;max-width:500px;}
-.btn-action{background:transparent;border:1px solid rgba(168,85,247,0.25);color:rgba(168,85,247,0.7);padding:6px 12px;font-family:'Orbitron',monospace;font-size:0.6em;letter-spacing:2px;cursor:pointer;border-radius:2px;transition:all 0.3s;}
-.btn-action:hover{background:rgba(168,85,247,0.08);border-color:#a855f7;color:#a855f7;}
-
-/* BOTTOM BAR */
-.bottombar{display:flex;justify-content:space-between;padding:8px 20px;border-top:1px solid rgba(0,245,255,0.08);font-family:'Orbitron',monospace;font-size:0.6em;letter-spacing:2px;color:rgba(0,245,255,0.3);flex-wrap:wrap;gap:6px;}
-
-/* WELCOME */
-.welcome{text-align:center;padding:30px 10px;color:rgba(0,245,255,0.25);}
-.welcome p{font-family:'Orbitron',monospace;font-size:0.7em;letter-spacing:3px;line-height:2;}
-
-/* PROGRESS RING */
-.progress-ring{display:flex;justify-content:center;margin:6px 0;}
-
-/* RESPONSIVE */
-@media(max-width:900px){.sidebar,.sidebar-right{display:none;}.sphere-container{width:220px;height:220px;}.sphere-container canvas{width:220px!important;height:220px!important;}}
-@media(max-width:500px){.sphere-container{width:180px;height:180px;}.sphere-container canvas{width:180px!important;height:180px!important;}.chat-window{height:160px;}}
+:root{--c:#00f5ff;--p:#a855f7;--g:#00ff88;--r:#ff4455;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:var(--c);font-family:'Share Tech Mono',monospace;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,0.008) 2px,rgba(0,245,255,0.008) 4px);pointer-events:none;z-index:999;animation:scan 10s linear infinite;}
+@keyframes scan{0%{background-position:0 0;}100%{background-position:0 200px;}}
+#bgC{position:fixed;inset:0;z-index:0;}
+.layout{position:fixed;inset:0;z-index:10;display:grid;grid-template-rows:42px 1fr 42px;}
+.tbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(0,4,16,0.75);border-bottom:1px solid rgba(0,245,255,0.1);backdrop-filter:blur(14px);}
+.tbar-seg{display:flex;gap:16px;align-items:center;font-family:'Orbitron',monospace;font-size:0.52em;letter-spacing:2px;}
+.tl{color:rgba(0,245,255,0.35);}
+.tv{color:var(--c);}
+.tv.g{color:var(--g);}
+.tv.p{color:var(--p);}
+.pulse-dot{width:5px;height:5px;border-radius:50%;background:var(--g);box-shadow:0 0 7px var(--g);display:inline-block;margin-right:5px;animation:pd 2s infinite;}
+@keyframes pd{0%,100%{opacity:1;}50%{opacity:0.15;}}
+.logo{font-family:'Orbitron',monospace;font-size:1.05em;font-weight:900;letter-spacing:7px;background:linear-gradient(90deg,var(--c),var(--p),var(--c));background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:ls 4s linear infinite;}
+@keyframes ls{0%{background-position:0%;}100%{background-position:200%;}}
+.mrow{display:grid;grid-template-columns:180px 1fr 180px;overflow:hidden;}
+.side{display:flex;flex-direction:column;gap:8px;padding:10px 8px;overflow-y:auto;background:rgba(0,3,12,0.4);backdrop-filter:blur(8px);}
+.side::-webkit-scrollbar{width:2px;}
+.side::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.15);}
+.side.left{border-right:1px solid rgba(0,245,255,0.08);}
+.side.right{border-left:1px solid rgba(0,245,255,0.08);}
+.pc{background:rgba(0,8,28,0.6);border:1px solid rgba(0,245,255,0.1);padding:10px 12px;position:relative;clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);transition:border-color 0.3s;}
+.pc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,245,255,0.025),transparent);pointer-events:none;}
+.pc::after{content:'';position:absolute;top:0;left:8px;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,245,255,0.4),transparent);}
+.pc:hover{border-color:rgba(0,245,255,0.3);}
+.pc-title{font-family:'Orbitron',monospace;font-size:0.48em;letter-spacing:2px;color:rgba(0,245,255,0.38);margin-bottom:7px;text-transform:uppercase;}
+.pc-val{font-family:'Orbitron',monospace;font-size:1.3em;font-weight:700;line-height:1;}
+.pc-val.c{color:var(--c);text-shadow:0 0 12px rgba(0,245,255,0.4);}
+.pc-val.p{color:var(--p);text-shadow:0 0 12px rgba(168,85,247,0.4);}
+.pc-val.g{color:var(--g);text-shadow:0 0 12px rgba(0,255,136,0.35);}
+.pc-sub{font-size:0.58em;color:rgba(0,245,255,0.28);margin-top:4px;letter-spacing:1px;}
+.pc-status{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:0.55em;letter-spacing:1px;}
+.sd{width:4px;height:4px;border-radius:50%;animation:pd 2s infinite;}
+.sd.g{background:var(--g);box-shadow:0 0 5px var(--g);}
+.sd.c{background:var(--c);box-shadow:0 0 5px var(--c);animation-delay:0.3s;}
+.sd.p{background:var(--p);box-shadow:0 0 5px var(--p);animation-delay:0.6s;}
+.spark{display:flex;align-items:flex-end;gap:2px;height:24px;margin-top:6px;}
+.sb{flex:1;background:rgba(0,245,255,0.18);border-radius:1px;min-height:2px;transition:height 0.4s,background 0.3s;}
+.sb.hi{background:rgba(0,245,255,0.65);}
+.sb.phi{background:rgba(168,85,247,0.65);}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.sphere-zone{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.sphere-info{position:absolute;text-align:center;pointer-events:none;}
+.si-top{top:-32px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:0.65em;letter-spacing:4px;color:rgba(0,245,255,0.5);}
+.si-bot{bottom:-28px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:1.2em;font-weight:700;background:linear-gradient(90deg,var(--c),var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;}
+.orbit{position:absolute;border-radius:50%;border:1px solid;pointer-events:none;}
+.o1{border-color:rgba(0,245,255,0.07);animation:orb1 12s linear infinite;}
+.o2{border-color:rgba(168,85,247,0.05);animation:orb1 18s linear infinite reverse;}
+.o3{border-color:rgba(0,245,255,0.04);animation:orb1 25s linear infinite;}
+@keyframes orb1{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.xh{position:absolute;pointer-events:none;}
+.xh-h{top:50%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,245,255,0.04),transparent);}
+.xh-v{left:50%;top:0;bottom:0;width:1px;background:linear-gradient(0deg,transparent,rgba(0,245,255,0.04),transparent);}
+.sys-line{font-family:'Orbitron',monospace;font-size:0.55em;letter-spacing:3px;color:rgba(0,245,255,0.3);text-align:center;margin-top:8px;padding:6px 20px;border:1px solid rgba(0,245,255,0.06);background:rgba(0,5,18,0.5);}
+.chat-zone{width:100%;max-width:480px;margin-top:8px;background:rgba(0,4,18,0.65);border:1px solid rgba(0,245,255,0.1);backdrop-filter:blur(14px);clip-path:polygon(10px 0%,calc(100% - 10px) 0%,100% 10px,100% 100%,0% 100%,0% 10px);}
+.chat-zone::before{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent,var(--c),var(--p),transparent);}
+.cwin{height:120px;overflow-y:auto;padding:10px 14px;scroll-behavior:smooth;}
+.cwin::-webkit-scrollbar{width:2px;}
+.cwin::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.15);}
+.cmsg{margin-bottom:10px;animation:mIn 0.3s ease;}
+@keyframes mIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.cmsg-hdr{font-family:'Orbitron',monospace;font-size:0.5em;letter-spacing:3px;margin-bottom:3px;}
+.hu{color:var(--p);}.ha{color:var(--c);}
+.cmsg-body{font-size:0.78em;line-height:1.55;padding:7px 11px;}
+.bu{background:rgba(168,85,247,0.07);border-left:2px solid rgba(168,85,247,0.35);color:rgba(255,255,255,0.8);}
+.ba{background:rgba(0,245,255,0.035);border-left:2px solid rgba(0,245,255,0.35);color:rgba(0,245,255,0.85);}
+.typing{display:flex;gap:4px;padding:7px 11px;}
+.td{width:4px;height:4px;border-radius:50%;background:var(--c);box-shadow:0 0 4px var(--c);animation:tb 1.2s infinite;}
+.td:nth-child(2){animation-delay:0.2s;}.td:nth-child(3){animation-delay:0.4s;}
+@keyframes tb{0%,100%{transform:translateY(0);opacity:0.25;}50%{transform:translateY(-4px);opacity:1;}}
+.ibar{display:flex;border-top:1px solid rgba(0,245,255,0.07);}
+.ibar textarea{flex:1;background:transparent;border:none;color:#fff;padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:0.82em;resize:none;outline:none;min-height:38px;max-height:70px;}
+.ibar textarea::placeholder{color:rgba(0,245,255,0.18);}
+.btn-send{background:transparent;border:none;border-left:1px solid rgba(0,245,255,0.08);color:var(--c);padding:0 16px;font-family:'Orbitron',monospace;font-size:0.55em;letter-spacing:2px;cursor:pointer;transition:all 0.25s;white-space:nowrap;}
+.btn-send:hover{background:rgba(0,245,255,0.07);}
+.qbar{display:flex;border-top:1px solid rgba(0,245,255,0.05);}
+.qb{flex:1;background:transparent;border:none;border-right:1px solid rgba(0,245,255,0.05);color:rgba(168,85,247,0.55);padding:5px;font-family:'Orbitron',monospace;font-size:0.47em;letter-spacing:1px;cursor:pointer;transition:all 0.25s;}
+.qb:last-child{border-right:none;}
+.qb:hover{background:rgba(168,85,247,0.07);color:var(--p);}
+.bbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(0,4,16,0.75);border-top:1px solid rgba(0,245,255,0.08);backdrop-filter:blur(14px);font-family:'Orbitron',monospace;font-size:0.5em;letter-spacing:2px;}
+.bbar-nav{display:flex;gap:4px;}
+.bnav{background:transparent;border:1px solid rgba(0,245,255,0.1);color:rgba(0,245,255,0.4);width:32px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1em;transition:all 0.25s;}
+.bnav:hover{border-color:rgba(0,245,255,0.4);color:var(--c);background:rgba(0,245,255,0.06);}
+.welcome-msg{text-align:center;padding:16px;color:rgba(0,245,255,0.18);font-family:'Orbitron',monospace;font-size:0.6em;letter-spacing:3px;line-height:2.2;}
+@media(max-width:700px){.mrow{grid-template-columns:0 1fr 0;}.side{display:none;}.chat-zone{max-width:96vw;}.cwin{height:100px;}.logo{font-size:0.85em;letter-spacing:4px;}.tbar-seg{gap:8px;font-size:0.45em;}}
+@media(max-width:400px){.logo{font-size:0.75em;letter-spacing:3px;}}
 </style>
 </head>
 <body>
-<canvas id="bgCanvas"></canvas>
-
-<div class="app">
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="tb-item status-online">SYS.STATUS &nbsp;<span>ONLINE</span></div>
-      <div class="tb-item">CLEARANCE: <span>LVL 9</span></div>
-    </div>
-    <div class="tb-item" style="font-size:1.1em;letter-spacing:6px;color:#00f5ff;font-weight:700;">NEURALCHAT</div>
-    <div class="topbar-right">
-      <div class="tb-item">TIME: <span id="clock">--:--:--</span></div>
-      <div class="tb-item">DATE: <span id="dateDisp">--.--.----</span></div>
-    </div>
-  </div>
-
-  <div class="main">
-    <!-- LEFT SIDEBAR -->
-    <div class="sidebar">
-      <div class="panel">
-        <div class="panel-title">/ Core Temp</div>
-        <div class="panel-value" id="pTemp">0.7</div>
-        <div class="panel-sub">MODEL TEMPERATURE</div>
-        <div class="mini-graph" id="gTemp"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">/ Energy Output</div>
-        <div class="panel-value" id="pEnergy">0%</div>
-        <div class="panel-sub">TOKEN USAGE</div>
-        <div class="panel-status"><div class="dot-green"></div> <span style="color:rgba(0,255,136,0.7)">OPTIMAL</span></div>
-        <div class="mini-graph" id="gEnergy"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">/ Response Time</div>
-        <div class="panel-value" id="pResp">-- ms</div>
-        <div class="panel-sub">LAST API CALL</div>
-        <div class="mini-graph" id="gResp"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">/ Data Integrity</div>
-        <div class="panel-value">100%</div>
-        <div class="panel-sub">MEMORY SECURE</div>
-        <div class="panel-status"><div class="dot-green"></div> <span style="color:rgba(0,255,136,0.7)">SECURE</span></div>
-      </div>
-    </div>
-
-    <!-- CENTER -->
-    <div class="center">
-      <div class="sphere-container">
-        <div class="sphere-ring ring1"></div>
-        <div class="sphere-ring ring2"></div>
-        <canvas id="sphereCanvas" width="280" height="280"></canvas>
-      </div>
-      <div class="sphere-label">NEURAL CORE</div>
-      <div class="sphere-pct" id="corePct">98.7%</div>
-
-      <div class="sys-msg">
-        <div class="sys-msg-title">// SYSTEM MESSAGE</div>
-        <div class="sys-msg-text" id="sysMsg">NEURAL CORE OPERATING WITHIN NORMAL PARAMETERS. ALL SYSTEMS NOMINAL.</div>
-      </div>
-
-      <div class="chat-section">
-        <div class="chat-window" id="chatWindow">
-          <div class="welcome"><p>NEURAL INTERFACE BEREIT<br>BEGINNE KOMMUNIKATION</p></div>
-        </div>
-      </div>
-
-      <div class="input-row">
-        <div class="input-wrap">
-          <textarea id="userInput" placeholder="Nachricht eingeben..." rows="1"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"
-            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-        </div>
-        <button class="btn-send" onclick="sendMessage()">SEND</button>
-      </div>
-      <div class="actions">
-        <button class="btn-action" onclick="clearMemory()">⟳ MEMORY RESET</button>
-        <button class="btn-action" onclick="getSummary()">◈ TAGES-BRIEF</button>
-        <button class="btn-action" onclick="clearChat()">✕ CLEAR</button>
-      </div>
-    </div>
-
-    <!-- RIGHT SIDEBAR -->
-    <div class="sidebar-right">
-      <div class="panel">
-        <div class="panel-title">/ Network Latency</div>
-        <div class="panel-value" id="pLatency">12.3 ms</div>
-        <div class="panel-sub">GROQ API</div>
-        <div class="panel-status"><div class="dot-cyan"></div> <span style="color:rgba(0,245,255,0.7)">OPTIMAL</span></div>
-        <div class="mini-graph" id="gLatency"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">/ Neural Activity</div>
-        <div class="panel-value" id="pMemory">0/20</div>
-        <div class="panel-sub">MEMORY SLOTS USED</div>
-        <div class="mini-graph" id="gMemory"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">/ Messages Total</div>
-        <div class="panel-value" id="pMsgs">0</div>
-        <div class="panel-sub">SESSION COUNT</div>
-        <div class="panel-status"><div class="dot-purple"></div> <span style="color:rgba(168,85,247,0.8)">ACTIVE</span></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">/ Uptime</div>
-        <div class="panel-value" id="pUptime">00:00:00</div>
-        <div class="panel-sub">SESSION RUNTIME</div>
-        <div class="panel-status"><div class="dot-green"></div> <span style="color:rgba(0,255,136,0.7)">STABLE</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOTTOM BAR -->
-  <div class="bottombar">
-    <div>USER ID: ADMIN_01</div>
-    <div>MODEL: <span style="color:#00f5ff">llama-3.3-70b</span></div>
-    <div>PROTOCOL: <span style="color:#a855f7">LX-2048</span></div>
-    <div>VERSION: 3.0.0</div>
-  </div>
+<canvas id="bgC"></canvas>
+<div class="layout">
+<div class="tbar">
+<div class="tbar-seg"><span><span class="pulse-dot"></span><span class="tv g">ONLINE</span></span><span><span class="tl">SYS </span><span class="tv">STATUS</span></span><span class="tl" id="clk">--:--:--</span></div>
+<div class="logo">NEURAL</div>
+<div class="tbar-seg"><span><span class="tl">DATE </span><span class="tv" id="dte">--</span></span><span><span class="tl">VER </span><span class="tv">3.0</span></span><span><span class="tl">LVL </span><span class="tv p">9</span></span></div>
 </div>
-
+<div class="mrow">
+<div class="side left">
+<div class="pc"><div class="pc-title">/ Core Temp</div><div class="pc-val c">0.7</div><div class="pc-sub">HEAT INDEX</div><div class="spark" id="gTemp"></div></div>
+<div class="pc"><div class="pc-title">/ Energy</div><div class="pc-val p" id="pEnergy">0%</div><div class="pc-sub">TOKEN USAGE</div><div class="pc-status"><div class="sd g"></div><span style="color:rgba(0,255,136,0.6)">OPTIMAL</span></div><div class="spark" id="gEnergy"></div></div>
+<div class="pc"><div class="pc-title">/ Response</div><div class="pc-val c" id="pResp">-- ms</div><div class="pc-sub">LAST QUERY</div><div class="spark" id="gResp"></div></div>
+<div class="pc"><div class="pc-title">/ Integrity</div><div class="pc-val g">100%</div><div class="pc-sub">MEMORY SECURE</div><div class="pc-status"><div class="sd g"></div><span style="color:rgba(0,255,136,0.6)">SECURE</span></div></div>
+<div class="pc"><div class="pc-title">/ Nexus Link</div><div class="pc-val p" id="pNexus">98.7%</div><div class="pc-sub">QUANTUM BRIDGE</div><div class="pc-status"><div class="sd p"></div><span style="color:rgba(168,85,247,0.7)">LINKED</span></div></div>
+</div>
+<div class="center">
+<div class="xh xh-h"></div><div class="xh xh-v"></div>
+<div class="sphere-zone" id="sphereZone">
+<div class="orbit o1" id="oo1"></div><div class="orbit o2" id="oo2"></div><div class="orbit o3" id="oo3"></div>
+<div class="sphere-info si-top">LUMEN CORE</div>
+<canvas id="sphC" style="cursor:grab;"></canvas>
+<div class="sphere-info si-bot"><span id="corePct">98.7%</span></div>
+</div>
+<div class="sys-line" id="sysLine">NEURAL CORE OPERATING WITHIN NORMAL PARAMETERS</div>
+<div class="chat-zone">
+<div class="cwin" id="cwin"><div class="welcome-msg">NEURAL CORE READY<br>AWAITING TRANSMISSION</div></div>
+<div class="ibar"><textarea id="inp" placeholder="> ENTER COMMAND..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();tx();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,70)+'px'"></textarea><button class="btn-send" onclick="tx()">SEND ▶</button></div>
+<div class="qbar"><button class="qb" onclick="clearMem()">⟳ MEMORY</button><button class="qb" onclick="getSumm()">◈ BRIEF</button><button class="qb" onclick="clearChat()">✕ CLEAR</button></div>
+</div>
+</div>
+<div class="side right">
+<div class="pc"><div class="pc-title">/ Network</div><div class="pc-val c" id="pLat">12.3 ms</div><div class="pc-sub">LATENCY</div><div class="pc-status"><div class="sd c"></div><span style="color:rgba(0,245,255,0.6)">OPTIMAL</span></div><div class="spark" id="gLat"></div></div>
+<div class="pc"><div class="pc-title">/ Neural Act.</div><div class="pc-val p" id="pMem">0/20</div><div class="pc-sub">MEMORY SLOTS</div><div class="pc-status"><div class="sd p"></div><span style="color:rgba(168,85,247,0.7)">SYNAPTIC</span></div><div class="spark" id="gMem"></div></div>
+<div class="pc"><div class="pc-title">/ Messages</div><div class="pc-val c" id="pMsgs">0</div><div class="pc-sub">SESSION COUNT</div><div class="pc-status"><div class="sd g"></div><span style="color:rgba(0,255,136,0.6)">ACTIVE</span></div></div>
+<div class="pc"><div class="pc-title">/ Uptime</div><div class="pc-val g" id="pUp">00:00:00</div><div class="pc-sub">RUNTIME</div><div class="pc-status"><div class="sd g"></div><span style="color:rgba(0,255,136,0.6)">STABLE</span></div></div>
+<div class="pc"><div class="pc-title">/ Quantum State</div><div class="pc-val p" id="pQ">93.2%</div><div class="pc-sub">COHERENCE</div><div class="spark" id="gQ"></div></div>
+</div>
+</div>
+<div class="bbar">
+<div class="tbar-seg"><span><span class="tl">USER </span><span class="tv">ADMIN_01</span></span><span><span class="tl">MODEL </span><span class="tv">llama-3.3-70b</span></span></div>
+<div class="bbar-nav"><button class="bnav">⌂</button><button class="bnav">◎</button><button class="bnav">▦</button><button class="bnav">⚙</button></div>
+<div class="tbar-seg"><span><span class="tl">PROTOCOL </span><span class="tv p">LX-2048</span></span><span><span class="tl">NEXUS </span><span class="tv">ACTIVE</span></span></div>
+</div>
+</div>
 <script>
-// ===================== BG NEURAL NETWORK =====================
-const bgC=document.getElementById("bgCanvas"),bgX=bgC.getContext("2d");
-let bNodes=[],bConns=[],bPulses=[],BW,BH;
-function bgResize(){BW=bgC.width=window.innerWidth;BH=bgC.height=window.innerHeight;}
-bgResize();window.addEventListener("resize",()=>{bgResize();bgInit();});
-function bgInit(){
-  bNodes=Array.from({length:Math.min(Math.floor(BW*BH/20000),60)},()=>({
-    x:Math.random()*BW,y:Math.random()*BH,vx:(Math.random()-0.5)*0.25,vy:(Math.random()-0.5)*0.25,
-    r:Math.random()*2+0.8,alpha:0,target:Math.random()*0.5+0.2,born:Date.now(),delay:Math.random()*3000,
-    color:Math.random()>0.6?"#a855f7":"#00f5ff",phase:Math.random()*Math.PI*2
-  }));
-  bConns=[];
-  for(let i=0;i<bNodes.length;i++)for(let j=i+1;j<bNodes.length;j++){
-    const d=Math.hypot(bNodes[j].x-bNodes[i].x,bNodes[j].y-bNodes[i].y);
-    if(d<180)bConns.push({a:bNodes[i],b:bNodes[j],alpha:0,born:Date.now()+Math.random()*2500});
-  }
+const bgC=document.getElementById('bgC');const bx=bgC.getContext('2d');
+let BW,BH,bN=[],bE=[],bP=[];
+function bResize(){BW=bgC.width=window.innerWidth;BH=bgC.height=window.innerHeight;}
+bResize();
+function bInit(){
+bN=Array.from({length:Math.min(Math.floor(BW*BH/13000),80)},()=>({x:Math.random()*BW,y:Math.random()*BH,vx:(Math.random()-0.5)*0.18,vy:(Math.random()-0.5)*0.18,r:Math.random()*1.5+0.4,a:0,ta:Math.random()*0.35+0.1,born:Date.now(),delay:Math.random()*2500,col:Math.random()>0.55?'#a855f7':'#00f5ff',ph:Math.random()*6.28}));
+bE=[];
+for(let i=0;i<bN.length;i++)for(let j=i+1;j<bN.length;j++){const d=Math.hypot(bN[j].x-bN[i].x,bN[j].y-bN[i].y);if(d<155)bE.push({a:bN[i],b:bN[j],al:0,born:Date.now()+Math.random()*3000});}
 }
-bgInit();
-let bLastP=0;
-function bgAnimate(now){
-  bgX.clearRect(0,0,BW,BH);
-  bConns.forEach(c=>{
-    if(now>c.born){c.alpha=Math.min(0.25,(now-c.born)/1200*0.25);}
-    const d=Math.hypot(c.b.x-c.a.x,c.b.y-c.a.y);
-    if(d<180&&c.alpha>0){
-      bgX.save();bgX.globalAlpha=c.alpha*(1-d/180)*Math.min(c.a.alpha,c.b.alpha)*2;
-      bgX.beginPath();bgX.moveTo(c.a.x,c.a.y);bgX.lineTo(c.b.x,c.b.y);
-      bgX.strokeStyle="rgba(0,245,255,0.5)";bgX.lineWidth=0.4;bgX.stroke();bgX.restore();
-    }
-  });
-  bNodes.forEach(n=>{
-    const age=now-n.born-n.delay;if(age>0)n.alpha=Math.min(n.target,age/1000);
-    n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>BW)n.vx*=-1;if(n.y<0||n.y>BH)n.vy*=-1;n.phase+=0.018;
-    if(n.alpha<=0)return;
-    const g=Math.sin(n.phase)*0.25+0.75;
-    bgX.save();bgX.globalAlpha=n.alpha*g;bgX.beginPath();bgX.arc(n.x,n.y,n.r,0,Math.PI*2);
-    bgX.fillStyle=n.color;bgX.shadowBlur=8;bgX.shadowColor=n.color;bgX.fill();bgX.restore();
-  });
-  if(now-bLastP>500){
-    const act=bConns.filter(c=>c.alpha>0.08);
-    if(act.length){const c=act[Math.floor(Math.random()*act.length)];
-      bPulses.push({ax:c.a.x,ay:c.a.y,bx:c.b.x,by:c.b.y,t:0,speed:0.006+Math.random()*0.006,color:Math.random()>0.5?"#00f5ff":"#a855f7",done:false});
-    }bLastP=now;
-  }
-  bPulses.forEach(p=>{
-    p.t+=p.speed;if(p.t>=1)p.done=true;
-    const x=p.ax+(p.bx-p.ax)*p.t,y=p.ay+(p.by-p.ay)*p.t;
-    bgX.save();bgX.beginPath();bgX.arc(x,y,2,0,Math.PI*2);bgX.fillStyle=p.color;
-    bgX.shadowBlur=12;bgX.shadowColor=p.color;bgX.globalAlpha=1-p.t*0.4;bgX.fill();bgX.restore();
-  });
-  bPulses=bPulses.filter(p=>!p.done);
-  requestAnimationFrame(bgAnimate);
-}
-requestAnimationFrame(bgAnimate);
-
-// ===================== SPHERE =====================
-const sC=document.getElementById("sphereCanvas"),sX=sC.getContext("2d");
-const SW=280,SH=280,CX=140,CY=140,SR=90;
-let sParticles=[],sTime=0,sPulsing=false,sPulseT=0;
-for(let i=0;i<180;i++){
-  const phi=Math.acos(1-2*(i+0.5)/180),theta=Math.PI*(1+Math.sqrt(5))*i;
-  sParticles.push({phi,theta,baseTheta:theta,speed:(Math.random()-0.5)*0.003,size:Math.random()*1.8+0.5,alpha:Math.random()*0.6+0.4,color:Math.random()>0.5?"#00f5ff":"#a855f7"});
-}
-function drawSphere(){
-  sX.clearRect(0,0,SW,SH);
-  sTime+=0.008;
-  if(sPulsing){sPulseT+=0.06;if(sPulseT>Math.PI)sPulsing=false;}
-  const pulseScale=sPulsing?1+Math.sin(sPulseT)*0.12:1;
-  const glowR=SR*pulseScale;
-  // Core glow
-  const coreGrad=sX.createRadialGradient(CX,CY,0,CX,CY,glowR*0.6);
-  coreGrad.addColorStop(0,"rgba(0,245,255,0.35)");
-  coreGrad.addColorStop(0.4,"rgba(0,245,255,0.12)");
-  coreGrad.addColorStop(1,"transparent");
-  sX.beginPath();sX.arc(CX,CY,glowR*0.6,0,Math.PI*2);sX.fillStyle=coreGrad;sX.fill();
-  // Outer glow
-  const outerGrad=sX.createRadialGradient(CX,CY,glowR*0.7,CX,CY,glowR*1.2);
-  outerGrad.addColorStop(0,"rgba(168,85,247,0.08)");outerGrad.addColorStop(1,"transparent");
-  sX.beginPath();sX.arc(CX,CY,glowR*1.2,0,Math.PI*2);sX.fillStyle=outerGrad;sX.fill();
-  // Equator rings
-  for(let r=0;r<3;r++){
-    const angle=sTime*(0.5+r*0.3);const tilt=r*0.4;
-    sX.save();sX.translate(CX,CY);sX.rotate(angle);sX.scale(1,Math.sin(tilt+0.6));
-    sX.beginPath();sX.arc(0,0,SR*pulseScale*(0.7+r*0.15),0,Math.PI*2);
-    sX.strokeStyle=r===1?"rgba(168,85,247,0.3)":"rgba(0,245,255,0.2)";
-    sX.lineWidth=0.8;sX.stroke();sX.restore();
-  }
-  // Particles
-  sParticles.forEach(p=>{
-    p.theta=p.baseTheta+sTime*p.speed*40;
-    const R=SR*pulseScale;
-    const x3=R*Math.sin(p.phi)*Math.cos(p.theta+sTime);
-    const y3=R*Math.sin(p.phi)*Math.sin(p.theta+sTime);
-    const z3=R*Math.cos(p.phi);
-    const depthFactor=(z3/R+1)/2;
-    const px=CX+x3;const py=CY+y3*0.55+z3*0.45;
-    if(z3<-20)return;
-    sX.save();sX.globalAlpha=p.alpha*depthFactor*(sPulsing?1+Math.sin(sPulseT)*0.3:1);
-    sX.beginPath();sX.arc(px,py,p.size*depthFactor,0,Math.PI*2);
-    sX.fillStyle=p.color;sX.shadowBlur=depthFactor>0.7?8:3;sX.shadowColor=p.color;sX.fill();sX.restore();
-  });
-  // Center bright core
-  const innerGrad=sX.createRadialGradient(CX,CY,0,CX,CY,18*pulseScale);
-  innerGrad.addColorStop(0,"rgba(255,255,255,0.9)");
-  innerGrad.addColorStop(0.3,"rgba(0,245,255,0.7)");
-  innerGrad.addColorStop(1,"transparent");
-  sX.beginPath();sX.arc(CX,CY,18*pulseScale,0,Math.PI*2);sX.fillStyle=innerGrad;sX.fill();
-  requestAnimationFrame(drawSphere);
-}
-drawSphere();
-function pulseSphere(){sPulsing=true;sPulseT=0;}
-
-// ===================== MINI GRAPHS =====================
-function initGraph(id){
-  const el=document.getElementById(id);if(!el)return;
-  el.innerHTML='';
-  for(let i=0;i<12;i++){
-    const bar=document.createElement('div');
-    bar.className='mini-bar';bar.style.height=(Math.random()*20+4)+'px';el.appendChild(bar);
-  }
-}
-['gTemp','gEnergy','gResp','gLatency','gMemory'].forEach(initGraph);
-function updateGraph(id,val,max){
-  const el=document.getElementById(id);if(!el)return;
-  const bars=el.querySelectorAll('.mini-bar');
-  bars.forEach((b,i)=>{
-    if(i===bars.length-1){b.style.height=Math.max(3,(val/max)*24)+'px';b.style.background='rgba(0,245,255,0.8)';}
-    else{const prev=bars[i+1];b.style.height=prev.style.height;b.style.background='rgba(0,245,255,0.3)';}
-  });
-}
-
-// ===================== CLOCK & UPTIME =====================
-const startTime=Date.now();
-function updateClock(){
-  const now=new Date();
-  document.getElementById('clock').textContent=now.toTimeString().slice(0,8);
-  document.getElementById('dateDisp').textContent=now.toLocaleDateString('de-DE');
-  const elapsed=Math.floor((Date.now()-startTime)/1000);
-  const h=String(Math.floor(elapsed/3600)).padStart(2,'0');
-  const m=String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
-  const s=String(elapsed%60).padStart(2,'0');
-  document.getElementById('pUptime').textContent=h+':'+m+':'+s;
-  // Animate core %
-  document.getElementById('corePct').textContent=(97+Math.random()*2).toFixed(1)+'%';
-  // Latency flicker
-  document.getElementById('pLatency').textContent=(10+Math.random()*8).toFixed(1)+' ms';
-  updateGraph('gLatency',10+Math.random()*8,30);
-}
-setInterval(updateClock,1000);updateClock();
-
-// ===================== CHAT =====================
-const chatWindow=document.getElementById('chatWindow');
-const userInput=document.getElementById('userInput');
-let firstMsg=true,msgCount=0,memCount=0;
-
-function addMessage(role,text){
-  if(firstMsg){chatWindow.innerHTML='';firstMsg=false;}
-  const msg=document.createElement('div');msg.className='message';
-  const isUser=role==='user';
-  msg.innerHTML='<div class="message-header '+(isUser?'user-header':'ai-header')+'">'+(isUser?'◈ USER INPUT':'⬡ NEURAL RESPONSE')+'</div><div class="message-bubble '+(isUser?'user-bubble':'ai-bubble')+'">'+text+'</div>';
-  chatWindow.appendChild(msg);chatWindow.scrollTop=chatWindow.scrollHeight;
-  msgCount++;
-  document.getElementById('pMsgs').textContent=msgCount;
-}
-function showTyping(){
-  const t=document.createElement('div');t.id='typing';t.className='message';
-  t.innerHTML='<div class="message-header ai-header">⬡ PROCESSING...</div><div class="typing"><span></span><span></span><span></span></div>';
-  chatWindow.appendChild(t);chatWindow.scrollTop=chatWindow.scrollHeight;
-  document.getElementById('sysMsg').textContent='NEURAL CORE PROCESSING REQUEST — QUANTUM ANALYSIS ACTIVE...';
-}
-function removeTyping(){const t=document.getElementById('typing');if(t)t.remove();}
-
-async function sendMessage(){
-  const text=userInput.value.trim();if(!text)return;
-  addMessage('user',text);userInput.value='';userInput.style.height='auto';
-  showTyping();pulseSphere();
-  const t0=Date.now();
-  try{
-    const res=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:text})});
-    const data=await res.json();
-    const ms=Date.now()-t0;
-    removeTyping();addMessage('ai',data.result||data.error);
-    document.getElementById('pResp').textContent=ms+' ms';
-    document.getElementById('pEnergy').textContent=Math.min(99,Math.floor(ms/20))+'%';
-    memCount=Math.min(memCount+2,20);
-    document.getElementById('pMemory').textContent=memCount+'/20';
-    document.getElementById('sysMsg').textContent='RESPONSE RECEIVED — NEURAL SYNC COMPLETE. MEMORY UPDATED.';
-    updateGraph('gResp',ms,3000);updateGraph('gEnergy',Math.min(99,Math.floor(ms/20)),100);updateGraph('gMemory',memCount,20);
-    pulseSphere();
-  }catch(e){removeTyping();addMessage('ai','VERBINDUNGSFEHLER — SYSTEM NICHT ERREICHBAR');document.getElementById('sysMsg').textContent='CONNECTION ERROR — ATTEMPTING RECONNECT...';}
-}
-async function clearMemory(){
-  await fetch('/clear_memory',{method:'POST'});
-  memCount=0;document.getElementById('pMemory').textContent='0/20';
-  addMessage('ai','⟳ MEMORY ERFOLGREICH ZURÜCKGESETZT');
-  document.getElementById('sysMsg').textContent='MEMORY CORE WIPED — FRESH SESSION INITIALIZED.';
-  pulseSphere();
-}
-async function getSummary(){
-  showTyping();pulseSphere();
-  try{const res=await fetch('/summary');const data=await res.json();removeTyping();addMessage('ai',data.result.result);}
-  catch(e){removeTyping();addMessage('ai','FEHLER BEIM LADEN');}
-}
-function clearChat(){
-  chatWindow.innerHTML='<div class="welcome"><p>SYSTEM ZURÜCKGESETZT<br>BEREIT FÜR NEUE MISSION</p></div>';
-  firstMsg=true;msgCount=0;memCount=0;
-  document.getElementById('pMsgs').textContent='0';
-  document.getElementById('pMemory').textContent='0/20';
-}
-// Random energy animation
-setInterval(()=>{
-  const v=Math.random()*30+10;
-  updateGraph('gTemp',0.7,1);
-  updateGraph('gEnergy',v,100);
-},2000);
+bInit();
+let bLP=0;
+function bDraw(now){
+bx.clearRect(0,0,BW,BH);
+bE.forEach(e=>{if(now<e.born)return;e.al=Math.min(0.18,(now-e.born)/1200*0.18);const d=Math.hypot(e.b.x-e.a.x,e.b.y-e.a.y);if(d>155)return;bx.save();bx.globalAlpha=e.al*(1-d/155)*Math.min(e.a.a,e.b.a)*3;bx.beginPath();bx.moveTo(e.a.x,e.a.y);bx.lineTo(e.b.x,e.b.y);bx.strokeStyle='rgba(0,245,255,0.5)';bx.lineWidth=0.3;bx.stroke();bx.restore();});
+bN.forEach(n=>{const age=now-n.born-n.delay;if(age>0)n.a=Math.min(n.ta,age/700);n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>BW)n.vx*=-1;if(n.y<0||n.y>BH)n.vy*=-1;n.ph+=0.012;if(n.a<=0)return;bx.save();bx.globalAlpha=n.a*(Math.sin(n.ph)*0.2+0.8);bx.beginPath();bx.arc(n.x,n.y,n.r,0,6.28);bx.fillStyle=n.col;bx.shadowBlur=5;bx.shadowColor=n.col;bx.fill();bx.restore();});
+if(now-bLP>320){const act=bE.filter(e=>e.al>0.05);if(act.length){const e=act[Math.floor(Math.random()*act.length)];const f=Math.random()>0.5;bP.push({ax:f?e.a.x:e.b.x,ay:f?e.a.y:e.b.y,bx:f?e.b.x:e.a.x,by:f?e.b.y:e.a.y,t:0,s:0.005+Math.random()*0.006,col:Math.random()>0.5?'#00f5ff':'#a855f7',done:false});}bLP=now;}
+bP.forEach(p=>{p.t+=p.s;if(p.t>=1)p.done=true;const x=p.ax+(p.bx-p.ax)*p.t,y=p.ay+(p.by-p.ay)*p.t;bx.save();bx.beginPath();bx.arc(x,y,1.6,0,6.28);bx.fillStyle=p.col;bx.shadowBlur=9;bx.shadowColor=p.col;bx.globalAlpha=1-p.t*0.5;bx.fill();bx.restore();});
+bP=bP.filter(p=>!p.done);
+requestAnimationFrame(bDraw);}
+requestAnimationFrame(bDraw);
+const sc=document.getElementById('sphC');const sx=sc.getContext('2d');
+let SW,SH,CX,CY,SR,sT=0,sRX=0.25,sRY=0,sVX=0,sVY=0.003,sPulse=false,sPT=0,sDrag=false,sDX=0,sDY=0;
+function sResize(){const ctr=document.querySelector('.center');const avail=Math.min(ctr.clientWidth*0.55,ctr.clientHeight*0.48,320);SW=SH=Math.max(160,Math.floor(avail));sc.width=SW;sc.height=SH;sc.style.width=SW+'px';sc.style.height=SH+'px';CX=SW/2;CY=SH/2;SR=SW*0.33;const s=SW*1.2;['oo1','oo2','oo3'].forEach((id,i)=>{const el=document.getElementById(id);const rs=s*(0.9+i*0.12);el.style.width=rs+'px';el.style.height=rs+'px';el.style.left=(SW/2-rs/2)+'px';el.style.top=(SH/2-rs/2)+'px';});}
+sResize();window.addEventListener('resize',()=>{bResize();bInit();sResize();});
+const NPTS=240;const spts=[];for(let i=0;i<NPTS;i++){spts.push({phi:Math.acos(1-2*(i+0.5)/NPTS),theta:Math.PI*(1+Math.sqrt(5))*i,r:Math.random()*1.8+0.4,a:Math.random()*0.65+0.3,col:Math.random()>0.45?'#00f5ff':'#a855f7',spd:(Math.random()-0.5)*0.003});}
+const NTEN=32;const tens=[];for(let i=0;i<NTEN;i++){tens.push({phi:Math.random()*Math.PI,theta:Math.random()*6.28,len:0.35+Math.random()*0.55,w:Math.random()*1.6+0.5,spd:(Math.random()-0.5)*0.005,ph:Math.random()*6.28,col:Math.random()>0.5?'rgba(0,245,255,':'rgba(168,85,247,'});}
+function drawSph(now){
+sx.clearRect(0,0,SW,SH);sT=now*0.001;sRY+=sVY;sRX+=sVX;sVX*=0.95;sVY*=0.9995;
+if(sPulse){sPT+=0.05;if(sPT>Math.PI*2)sPulse=false;}
+const pulse=sPulse?1+Math.sin(sPT)*0.14:1;const R=SR*pulse;
+for(let g=4;g>0;g--){const gr=sx.createRadialGradient(CX,CY,R*0.5,CX,CY,R*(1+g*0.18));gr.addColorStop(0,`rgba(0,245,255,${0.05/g})`);gr.addColorStop(0.5,`rgba(168,85,247,${0.03/g})`);gr.addColorStop(1,'transparent');sx.beginPath();sx.arc(CX,CY,R*(1+g*0.18),0,6.28);sx.fillStyle=gr;sx.fill();}
+for(let r=0;r<6;r++){const angle=sT*(0.25+r*0.12)+r*1.05;const tilt=sRX+r*0.35;const rs=(0.62+r*0.07)*pulse;sx.save();sx.translate(CX,CY);sx.transform(Math.cos(sRY+r*0.6),Math.sin(tilt)*Math.sin(sRY+r*0.6),-Math.sin(sRY+r*0.6),Math.sin(tilt)*Math.cos(sRY+r*0.6),0,0);sx.beginPath();sx.ellipse(0,0,R*rs,R*rs*Math.abs(Math.cos(tilt+0.3)),angle,0,6.28);sx.strokeStyle=r%2===0?`rgba(0,245,255,${0.1+r*0.025})`:`rgba(168,85,247,${0.08+r*0.02})`;sx.lineWidth=0.7;sx.stroke();for(let n=0;n<5;n++){const na=angle+n*1.256;const nx=R*rs*Math.cos(na),ny=R*rs*Math.abs(Math.cos(tilt+0.3))*Math.sin(na);sx.beginPath();sx.arc(nx,ny,1.2,0,6.28);sx.fillStyle=r%2===0?'#00f5ff':'#a855f7';sx.shadowBlur=6;sx.shadowColor=sx.fillStyle;sx.fill();}sx.restore();}
+tens.forEach(t=>{t.ph+=t.spd*2;t.theta+=t.spd;const sp=Math.sin(t.phi),cp=Math.cos(t.phi);const st=Math.sin(t.theta+sRY),ct=Math.cos(t.theta+sRY);const x0=R*sp*ct,y0=R*sp*st*Math.sin(sRX)+R*cp*Math.cos(sRX);const z0=R*sp*st*Math.cos(sRX)-R*cp*Math.sin(sRX);if(z0<-R*0.05)return;const dep=(z0/R+1)/2;const tlen=R*t.len*(1+Math.sin(t.ph)*0.28)*(sPulse?1+Math.sin(sPT)*0.45:1);const nx=CX+x0,ny=CY+y0,ex=nx+(x0/R)*tlen,ey=ny+(y0/R)*tlen;const al=(0.12+dep*0.4)*(sPulse?1.4:1);const g=sx.createLinearGradient(nx,ny,ex,ey);g.addColorStop(0,t.col+Math.min(0.95,al+0.25).toFixed(2)+')');g.addColorStop(0.55,t.col+(al*0.45).toFixed(2)+')');g.addColorStop(1,t.col+'0)');sx.save();sx.beginPath();sx.moveTo(nx,ny);sx.lineTo(ex,ey);sx.strokeStyle=g;sx.lineWidth=t.w*(0.4+dep*0.6);sx.lineCap='round';sx.shadowBlur=sPulse?14:5;sx.shadowColor=t.col+'0.4)';sx.stroke();sx.beginPath();sx.arc(ex,ey,1.4*(0.4+dep*0.6),0,6.28);sx.fillStyle=t.col+Math.min(0.9,al).toFixed(2)+')';sx.fill();sx.restore();});
+spts.forEach(p=>{p.theta+=p.spd+sVY*0.25;const sp=Math.sin(p.phi),cp=Math.cos(p.phi);const st=Math.sin(p.theta+sRY),ct=Math.cos(p.theta+sRY);const x=R*sp*ct,y=R*sp*st*Math.sin(sRX)+R*cp*Math.cos(sRX);const z=R*sp*st*Math.cos(sRX)-R*cp*Math.sin(sRX);if(z<-R*0.04)return;const dep=(z/R+1)/2;sx.save();sx.globalAlpha=p.a*dep*(sPulse?1+Math.sin(sPT)*0.35:1);sx.beginPath();sx.arc(CX+x,CY+y,p.r*dep,0,6.28);sx.fillStyle=p.col;sx.shadowBlur=dep>0.6?8:3;sx.shadowColor=p.col;sx.fill();sx.restore();});
+const cg=sx.createRadialGradient(CX,CY,0,CX,CY,SW*0.065*pulse);cg.addColorStop(0,'rgba(255,255,255,1)');cg.addColorStop(0.25,'rgba(180,245,255,0.9)');cg.addColorStop(0.55,'rgba(0,245,255,0.4)');cg.addColorStop(1,'transparent');sx.beginPath();sx.arc(CX,CY,SW*0.065*pulse,0,6.28);sx.fillStyle=cg;sx.fill();sx.beginPath();sx.arc(CX,CY,SW*0.022*pulse,0,6.28);sx.fillStyle='rgba(255,255,255,0.97)';sx.shadowBlur=22;sx.shadowColor='#fff';sx.fill();
+requestAnimationFrame(drawSph);}
+requestAnimationFrame(drawSph);
+sc.addEventListener('mousedown',e=>{sDrag=true;sDX=e.clientX;sDY=e.clientY;sc.style.cursor='grabbing';});
+document.addEventListener('mousemove',e=>{if(!sDrag)return;sVY+=(e.clientX-sDX)*0.0007;sVX+=(e.clientY-sDY)*0.0007;sDX=e.clientX;sDY=e.clientY;});
+document.addEventListener('mouseup',()=>{sDrag=false;sc.style.cursor='grab';});
+sc.addEventListener('touchstart',e=>{sDrag=true;sDX=e.touches.clientX;sDY=e.touches.clientY;},{passive:true});
+sc.addEventListener('touchmove',e=>{if(!sDrag)return;sVY+=(e.touches.clientX-sDX)*0.0009;sVX+=(e.touches.clientY-sDY)*0.0009;sDX=e.touches.clientX;sDY=e.touches.clientY;},{passive:true});
+sc.addEventListener('touchend',()=>{sDrag=false;});
+sc.addEventListener('dblclick',()=>{sPulse=true;sPT=0;sVY+=0.1;});
+function pulse(){sPulse=true;sPT=0;sVY+=0.045;}
+function initSpark(id){const el=document.getElementById(id);if(!el)return;el.innerHTML='';for(let i=0;i<14;i++){const b=document.createElement('div');b.className='sb';b.style.height=(Math.random()*16+3)+'px';el.appendChild(b);}}
+['gTemp','gEnergy','gResp','gLat','gMem','gQ'].forEach(initSpark);
+function pushSpark(id,val,max,cls='hi'){const el=document.getElementById(id);if(!el)return;const bars=[...el.querySelectorAll('.sb')];for(let i=0;i<bars.length-1;i++){bars[i].style.height=bars[i+1].style.height;bars[i].classList.remove('hi','phi');}const l=bars[bars.length-1];l.style.height=Math.max(2,Math.min(24,(val/max)*24))+'px';l.classList.add(cls);}
+setInterval(()=>{const lat=9+Math.random()*12;document.getElementById('pLat').textContent=lat.toFixed(1)+' ms';document.getElementById('pNexus').textContent=(97+Math.random()*2).toFixed(1)+'%';document.getElementById('pQ').textContent=(90+Math.random()*7).toFixed(1)+'%';document.getElementById('corePct').textContent=(97+Math.random()*2).toFixed(1)+'%';pushSpark('gLat',lat,35);pushSpark('gQ',90+Math.random()*7,100,'phi');},1800);
+const t0=Date.now();
+function tick(){const n=new Date();document.getElementById('clk').textContent=n.toTimeString().slice(0,8);document.getElementById('dte').textContent=n.toLocaleDateString('de-DE');const el=Math.floor((Date.now()-t0)/1000);const h=String(Math.floor(el/3600)).padStart(2,'0'),m=String(Math.floor(el%3600/60)).padStart(2,'0'),s=String(el%60).padStart(2,'0');document.getElementById('pUp').textContent=h+':'+m+':'+s;}
+setInterval(tick,1000);tick();
+const SMSGS=['NEURAL CORE OPERATING WITHIN NORMAL PARAMETERS — ALL SYSTEMS NOMINAL','QUANTUM SYNC ACTIVE — SYNAPTIC PATHWAYS ONLINE','MEMORY MATRIX STABLE — READY FOR INPUT','ENERGY FLOW: 98% — NEXUS LINK SECURE','SIGNAL STRENGTH OPTIMAL — AWAITING COMMAND'];
+let smi=0;setInterval(()=>{smi=(smi+1)%SMSGS.length;document.getElementById('sysLine').textContent=SMSGS[smi];},5000);
+const cwin=document.getElementById('cwin');const inp=document.getElementById('inp');
+let firstMsg=true,mc=0,memc=0;
+function addMsg(role,txt){if(firstMsg){cwin.innerHTML='';firstMsg=false;}const d=document.createElement('div');d.className='cmsg';const u=role==='user';d.innerHTML='<div class="cmsg-hdr '+(u?'hu':'ha')+'">'+(u?'◈ USER':'⬡ NEURAL')+'</div><div class="cmsg-body '+(u?'bu':'ba')+'">'+txt+'</div>';cwin.appendChild(d);cwin.scrollTop=cwin.scrollHeight;mc++;document.getElementById('pMsgs').textContent=mc;}
+function showTyp(){const t=document.createElement('div');t.id='typ';t.className='cmsg';t.innerHTML='<div class="cmsg-hdr ha">⬡ PROCESSING</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>';cwin.appendChild(t);cwin.scrollTop=cwin.scrollHeight;document.getElementById('sysLine').textContent='QUANTUM ANALYSIS IN PROGRESS...';}
+function rmTyp(){const t=document.getElementById('typ');if(t)t.remove();}
+async function tx(){const text=inp.value.trim();if(!text)return;addMsg('user',text);inp.value='';inp.style.height='auto';showTyp();pulse();const t0r=Date.now();try{const res=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:text})});const data=await res.json();const ms=Date.now()-t0r;rmTyp();addMsg('ai',data.result||data.error);pulse();document.getElementById('pResp').textContent=ms+' ms';const ePct=Math.min(98,Math.floor(ms/18));document.getElementById('pEnergy').textContent=ePct+'%';memc=Math.min(memc+2,20);document.getElementById('pMem').textContent=memc+'/20';pushSpark('gResp',ms,3000);pushSpark('gEnergy',ePct,100,'phi');pushSpark('gMem',memc,20,'phi');document.getElementById('sysLine').textContent='RESPONSE DELIVERED — NEURAL SYNC COMPLETE';}catch(e){rmTyp();addMsg('ai','CONNECTION ERROR — QUANTUM LINK DISRUPTED');}}
+async function clearMem(){await fetch('/clear_memory',{method:'POST'});memc=0;document.getElementById('pMem').textContent='0/20';addMsg('ai','MEMORY CORE WIPED — QUANTUM STATE RESET');pulse();}
+async function getSumm(){showTyp();pulse();try{const res=await fetch('/summary');const data=await res.json();rmTyp();addMsg('ai',data.result.result);}catch(e){rmTyp();addMsg('ai','DATA STREAM ERROR');}}
+function clearChat(){cwin.innerHTML='<div class="welcome-msg">SYSTEM RESET — AWAITING TRANSMISSION</div>';firstMsg=true;mc=0;memc=0;document.getElementById('pMsgs').textContent='0';document.getElementById('pMem').textContent='0/20';}
 </script>
 </body>
-</html>'''
+</html>
 
-with open('output/jarvis_dashboard.html','w',encoding='utf-8') as f:
-    f.write(html)
-print(f"Done! {len(html)} chars")
+
