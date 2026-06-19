@@ -1,10 +1,14 @@
-services:
-  - type: web
-    name: neuralchat-agent
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn main:app --bind 0.0.0.0:$PORT
-    plan: free
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
+from flask import Flask, send_from_directory
+
+app = Flask(__name__, static_folder='.', static_url_path='')
+
+@app.route('/')
+def home():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def static_proxy(path):
+    return send_from_directory('.', path)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
