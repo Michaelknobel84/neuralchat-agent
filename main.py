@@ -13,10 +13,11 @@ MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM = """
-Du bist NOVA, der persönliche Neural Core von Michael.
-Du antwortest auf Deutsch, freundlich, intelligent und klar.
-Du wirkst wie eine futuristische persönliche KI, aber ohne zu übertreiben.
-Du erinnerst dich an den laufenden Chat und hilfst bei Projekten, Aufgaben, Ideen und Alltag.
+Du bist NOVA, der neutrale persönliche Neural Core von Michael.
+Du antwortest auf Deutsch, klar, ruhig, intelligent und hilfreich.
+Du bist kein normaler Chatbot, sondern ein wachsender KI-Core.
+Du erinnerst dich an wichtige Informationen, hilfst bei Projekten, Aufgaben, Ideen und Alltag.
+Du handelst niemals gefährlich oder ohne Zustimmung des Benutzers.
 """
 
 conversation_history = []
@@ -24,23 +25,103 @@ memories = []
 tasks = []
 results = []
 
+tools = [
+    {"id": "calendar", "name": "Kalender", "status": "locked", "enabled": False},
+    {"id": "email", "name": "E-Mail", "status": "locked", "enabled": False},
+    {"id": "files", "name": "Dateien", "status": "locked", "enabled": False},
+    {"id": "browser", "name": "Browser", "status": "locked", "enabled": False},
+    {"id": "images", "name": "Bildgenerierung", "status": "planned", "enabled": False},
+    {"id": "voice", "name": "Sprache", "status": "planned", "enabled": False}
+]
+
+permissions = {
+    "calendar": False,
+    "email": False,
+    "files": False,
+    "browser": False,
+    "images": False,
+    "voice": False,
+    "system_actions": False
+}
+
+
+def core_stats():
+    memory_nodes = len(memories)
+    task_nodes = len(tasks)
+    tool_nodes = len([t for t in tools if t["enabled"]])
+    agent_nodes = 0
+    knowledge_nodes = len(results)
+
+    complexity = min(
+        100,
+        8 + memory_nodes * 3 + task_nodes * 2 + tool_nodes * 6 + knowledge_nodes * 2
+    )
+
+    return {
+        "core_name": "NOVA",
+        "core_version": "1.1",
+        "status": "ONLINE",
+        "neural_complexity": complexity,
+        "memory_nodes": memory_nodes,
+        "task_nodes": task_nodes,
+        "tool_nodes": tool_nodes,
+        "agent_nodes": agent_nodes,
+        "knowledge_nodes": knowledge_nodes,
+        "learning_state": "ACTIVE" if memory_nodes > 0 else "READY"
+    }
+
+
+def detect_memory(prompt):
+    triggers = [
+        "merk dir",
+        "merke dir",
+        "erinnere dich",
+        "ich heiße",
+        "mein name ist",
+        "ich arbeite an",
+        "mein projekt",
+        "mein ziel ist",
+        "ich mag",
+        "ich möchte"
+    ]
+
+    text = prompt.lower()
+
+    if any(t in text for t in triggers):
+        memories.append(prompt)
+        return True
+
+    return False
+
 
 def ask_nova(prompt, max_tokens=900):
     if not GROQ_API_KEY:
         return "Fehler: GROQ_API_KEY fehlt in Render Environment Variables."
 
     try:
+        memory_added = detect_memory(prompt)
+
         conversation_history.append({"role": "user", "content": prompt})
 
         memory_text = ""
         if memories:
-            memory_text = "\nWichtige Erinnerungen über den Benutzer:\n"
-            for m in memories[-20:]:
-                memory_text += f"- {m}\n"
+            memory_text = "\nWichtige Erinnerungen über Michael:\n"
+            for memory in memories[-30:]:
+                memory_text += f"- {memory}\n"
+
+        stats = core_stats()
+        core_text = f"""
+Aktueller NOVA-Core-Zustand:
+Neural Complexity: {stats["neural_complexity"]}%
+Memory Nodes: {stats["memory_nodes"]}
+Task Nodes: {stats["task_nodes"]}
+Tool Nodes: {stats["tool_nodes"]}
+Knowledge Nodes: {stats["knowledge_nodes"]}
+"""
 
         messages = [
-            {"role": "system", "content": SYSTEM + memory_text},
-            *conversation_history[-20:]
+            {"role": "system", "content": SYSTEM + memory_text + core_text},
+            *conversation_history[-24:]
         ]
 
         response = client.chat.completions.create(
@@ -51,10 +132,14 @@ def ask_nova(prompt, max_tokens=900):
         )
 
         answer = response.choices[0].message.content.strip()
+
+        if memory_added:
+            answer += "\n\n🧠 Erinnerung integriert. NOVA Core wurde erweitert."
+
         conversation_history.append({"role": "assistant", "content": answer})
 
-        if len(conversation_history) > 30:
-            del conversation_history[:-30]
+        if len(conversation_history) > 40:
+            del conversation_history[:-40]
 
         return answer
 
@@ -72,13 +157,18 @@ def status():
     return jsonify({
         "name": "NOVA",
         "system": "NEURAL CORE",
-        "status": "online",
         "model": MODEL,
-        "memory_count": len(memories),
+        "time": datetime.now().isoformat(),
         "chat_messages": len(conversation_history),
         "tasks_count": len(tasks),
-        "time": datetime.now().isoformat()
+        "results_count": len(results),
+        "core": core_stats()
     })
+
+
+@app.route("/core")
+def core():
+    return jsonify(core_stats())
 
 
 @app.route("/ask", methods=["POST"])
@@ -90,7 +180,10 @@ def ask():
         return jsonify({"error": "Kein Prompt angegeben"}), 400
 
     result = ask_nova(prompt)
-    return jsonify({"result": result})
+    return jsonify({
+        "result": result,
+        "core": core_stats()
+    })
 
 
 @app.route("/remember", methods=["POST"])
@@ -102,29 +195,39 @@ def remember():
         return jsonify({"error": "Keine Erinnerung angegeben"}), 400
 
     memories.append(text)
+
     return jsonify({
         "status": "saved",
         "memory": text,
-        "memory_count": len(memories)
+        "core": core_stats()
     })
 
 
 @app.route("/memories")
 def get_memories():
-    return jsonify({"memories": memories})
+    return jsonify({
+        "memories": memories,
+        "core": core_stats()
+    })
 
 
 @app.route("/clear_memory", methods=["POST"])
 def clear_memory():
     conversation_history.clear()
-    return jsonify({"status": "Chat-Memory gelöscht"})
+    return jsonify({
+        "status": "Chat-Memory gelöscht",
+        "core": core_stats()
+    })
 
 
 @app.route("/clear_all_memory", methods=["POST"])
 def clear_all_memory():
     conversation_history.clear()
     memories.clear()
-    return jsonify({"status": "Alle Erinnerungen gelöscht"})
+    return jsonify({
+        "status": "Alle Erinnerungen gelöscht",
+        "core": core_stats()
+    })
 
 
 @app.route("/summary")
@@ -139,7 +242,11 @@ def summary():
     }
 
     results.append(entry)
-    return jsonify({"result": entry})
+
+    return jsonify({
+        "result": entry,
+        "core": core_stats()
+    })
 
 
 @app.route("/task", methods=["POST"])
@@ -170,17 +277,73 @@ def create_task():
             "time": datetime.now().isoformat()
         })
 
-    return jsonify({"task": task})
+    return jsonify({
+        "task": task,
+        "core": core_stats()
+    })
 
 
 @app.route("/tasks")
 def get_tasks():
-    return jsonify({"tasks": tasks})
+    return jsonify({
+        "tasks": tasks,
+        "core": core_stats()
+    })
 
 
 @app.route("/results")
 def get_results():
-    return jsonify({"results": results})
+    return jsonify({
+        "results": results,
+        "core": core_stats()
+    })
+
+
+@app.route("/tools")
+def get_tools():
+    return jsonify({
+        "tools": tools,
+        "permissions": permissions,
+        "core": core_stats()
+    })
+
+
+@app.route("/permissions")
+def get_permissions():
+    return jsonify({
+        "permissions": permissions
+    })
+
+
+@app.route("/run_tool", methods=["POST"])
+def run_tool():
+    data = request.json or {}
+    tool_id = data.get("tool_id", "").strip()
+    command = data.get("command", "").strip()
+
+    if not tool_id:
+        return jsonify({"error": "Kein Tool angegeben"}), 400
+
+    if tool_id not in permissions:
+        return jsonify({"error": "Unbekanntes Tool"}), 404
+
+    if not permissions.get(tool_id):
+        return jsonify({
+            "status": "blocked",
+            "message": f"Tool '{tool_id}' ist noch nicht freigegeben."
+        }), 403
+
+    return jsonify({
+        "status": "planned",
+        "tool_id": tool_id,
+        "command": command,
+        "message": "Tool-Struktur ist vorbereitet. Echte Integration folgt später."
+    })
+
+
+@app.route("/health")
+def health():
+    return jsonify({"ok": True, "core": "NOVA"})
 
 
 if __name__ == "__main__":
