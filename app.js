@@ -135,7 +135,7 @@ chatForm?.addEventListener("submit", async (e) => {
 
   addMessage(prompt, "user");
   chatInput.value = "";
-
+setThinkingMode(true);
   try {
     const response = await fetch("/ask", {
       method: "POST",
@@ -168,142 +168,167 @@ chatForm?.addEventListener("submit", async (e) => {
     }
 
     loadMemories();
-
+setThinkingMode(false);
   } catch (err) {
     addMessage(
       "Verbindung zu NOVA fehlgeschlagen."
     );
 
     console.error(err);
+setThinkingMode(false);
   }
 });
 
 /* ==========================
-   Neural Background
+   NOVA Neural Background V2
 ========================== */
 
-const canvas =
-  document.getElementById("coreCanvas");
-
-const ctx =
-  canvas.getContext("2d");
+const canvas = document.getElementById("coreCanvas");
+const ctx = canvas.getContext("2d");
 
 let particles = [];
+let pulses = [];
+let thinkingMode = false;
 
 function resize() {
-  canvas.width =
-    window.innerWidth;
-
-  canvas.height =
-    window.innerHeight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
 
-window.addEventListener(
-  "resize",
-  resize
-);
-
+window.addEventListener("resize", resize);
 resize();
 
-for (let i = 0; i < 60; i++) {
-  particles.push({
+function createParticles() {
+  particles = [];
+
+  const count = Math.min(120, Math.floor((canvas.width * canvas.height) / 9000));
+
+  for (let i = 0; i < count; i++) {
+    const colors = [
+      "rgba(0,207,255,0.85)",
+      "rgba(139,92,246,0.75)",
+      "rgba(255,209,102,0.75)"
+    ];
+
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2.2 + 0.7,
+      dx: (Math.random() - 0.5) * 0.55,
+      dy: (Math.random() - 0.5) * 0.55,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      glow: Math.random() * 10 + 6
+    });
+  }
+}
+
+createParticles();
+
+function spawnPulse() {
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height * 0.38;
+
+  pulses.push({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 1,
-    dx: (Math.random() - 0.5) * 0.4,
-    dy: (Math.random() - 0.5) * 0.4
+    tx: centerX + (Math.random() - 0.5) * 120,
+    ty: centerY + (Math.random() - 0.5) * 120,
+    life: 1,
+    speed: thinkingMode ? 0.035 : 0.018,
+    color: Math.random() > 0.45
+      ? "rgba(255,209,102,0.95)"
+      : "rgba(0,207,255,0.9)"
   });
 }
 
 function animate() {
-  ctx.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height * 0.38;
 
   particles.forEach(p => {
+    const pull = thinkingMode ? 0.0009 : 0.00025;
+
+    p.dx += (centerX - p.x) * pull;
+    p.dy += (centerY - p.y) * pull;
 
     p.x += p.dx;
     p.y += p.dy;
 
-    if (
-      p.x < 0 ||
-      p.x > canvas.width
-    ) p.dx *= -1;
+    p.dx *= 0.985;
+    p.dy *= 0.985;
 
-    if (
-      p.y < 0 ||
-      p.y > canvas.height
-    ) p.dy *= -1;
+    if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
 
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(
-      p.x,
-      p.y,
-      p.r,
-      0,
-      Math.PI * 2
-    );
-
-    ctx.fillStyle =
-      "rgba(0,207,255,0.7)";
-
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = p.glow;
+    ctx.shadowColor = p.color;
     ctx.fill();
+    ctx.restore();
   });
 
   for (let a = 0; a < particles.length; a++) {
-    for (
-      let b = a + 1;
-      b < particles.length;
-      b++
-    ) {
+    for (let b = a + 1; b < particles.length; b++) {
+      const dx = particles[a].x - particles[b].x;
+      const dy = particles[a].y - particles[b].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      const dx =
-        particles[a].x -
-        particles[b].x;
-
-      const dy =
-        particles[a].y -
-        particles[b].y;
-
-      const dist =
-        Math.sqrt(
-          dx * dx +
-          dy * dy
-        );
-
-      if (dist < 120) {
+      if (dist < 125) {
+        ctx.save();
         ctx.beginPath();
+        ctx.moveTo(particles[a].x, particles[a].y);
+        ctx.lineTo(particles[b].x, particles[b].y);
 
-        ctx.moveTo(
-          particles[a].x,
-          particles[a].y
-        );
+        const alpha = (1 - dist / 125) * (thinkingMode ? 0.9 : 0.45);
 
-        ctx.lineTo(
-          particles[b].x,
-          particles[b].y
-        );
-
-        ctx.strokeStyle =
-          `rgba(139,92,246,${
-            1 - dist / 120
-          })`;
-
+        ctx.strokeStyle = `rgba(0,207,255,${alpha})`;
+        ctx.lineWidth = thinkingMode ? 1.1 : 0.55;
+        ctx.shadowBlur = thinkingMode ? 10 : 3;
+        ctx.shadowColor = "rgba(0,207,255,0.8)";
         ctx.stroke();
+        ctx.restore();
       }
     }
   }
 
-  requestAnimationFrame(
-    animate
-  );
+  if (Math.random() < (thinkingMode ? 0.09 : 0.025)) {
+    spawnPulse();
+  }
+
+  pulses.forEach(p => {
+    p.x += (p.tx - p.x) * p.speed;
+    p.y += (p.ty - p.y) * p.speed;
+    p.life -= thinkingMode ? 0.012 : 0.008;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = Math.max(p.life, 0);
+    ctx.shadowBlur = 22;
+    ctx.shadowColor = p.color;
+    ctx.fill();
+    ctx.restore();
+  });
+
+  pulses = pulses.filter(p => p.life > 0);
+
+  requestAnimationFrame(animate);
 }
 
 animate();
 
+function setThinkingMode(active) {
+  thinkingMode = active;
+  document.body.classList.toggle("thinking", active);
+}
+
+/* Initial loading */
 loadCore();
 loadMemories();
 loadTools();
