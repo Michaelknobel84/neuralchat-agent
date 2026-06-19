@@ -140,15 +140,7 @@ h1 {
   animation: auraPulse 3.8s ease-in-out infinite;
 }
 
-.nova-core::after {
-  content: "AWARENESS 8%";
-  position: absolute;
-  bottom: -34px;
-  color: var(--gold);
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-shadow: 0 0 12px rgba(255,209,102,0.7);
-}
+
 
 .core-ring {
   position: absolute;
@@ -201,6 +193,16 @@ h1 {
   letter-spacing: 4px;
   color: #020812;
   font-weight: 900;
+}
+
+.awareness-label {
+  position: absolute;
+  bottom: -42px;
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 12px rgba(255,209,102,0.7);
+  white-space: nowrap;
 }
 
 .floating-panel,
