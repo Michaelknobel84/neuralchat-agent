@@ -1,4 +1,65 @@
-services:
+# Build a clean minimal Flask app structure that serves index.html and can later be expanded.
+main_py = '''from flask import Flask, send_from_directory
+
+app = Flask(__name__, static_folder='.', static_url_path='')
+
+@app.route('/')
+def home():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def static_proxy(path):
+    return send_from_directory('.', path)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+'''
+
+index_html = '''<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>NEURAL APP</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{width:100%;height:100%;background:#020812;color:#00cfff;font-family:Arial,sans-serif;overflow:hidden}
+    body{display:flex;align-items:center;justify-content:center}
+    .wrap{width:100%;height:100%;display:flex;flex-direction:column}
+    .top{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid rgba(0,207,255,.15);background:rgba(0,10,24,.92)}
+    .brand{letter-spacing:6px;font-weight:700}
+    .main{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:16px;min-height:0}
+    .orb{width:min(68vw,240px);height:min(68vw,240px);border-radius:50%;background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.98) 0%, rgba(0,207,255,.7) 12%, rgba(123,47,255,.35) 28%, rgba(2,8,18,0) 70%);box-shadow:0 0 40px rgba(0,207,255,.22),0 0 120px rgba(123,47,255,.16);position:relative;animation:pulse 4s ease-in-out infinite}
+    .orb::before,.orb::after{content:'';position:absolute;inset:-18%;border:1px solid rgba(0,207,255,.18);border-radius:50%;animation:spin 18s linear infinite}
+    .orb::after{inset:-30%;border-color:rgba(123,47,255,.12);animation-duration:28s;animation-direction:reverse}
+    .chat{width:min(92vw,680px);height:min(30vh,240px);border:1px solid rgba(0,207,255,.14);border-radius:14px;background:rgba(0,10,24,.7);backdrop-filter:blur(12px);overflow:hidden;display:flex;flex-direction:column}
+    .log{flex:1;padding:12px;overflow:auto;color:rgba(255,255,255,.86);font-size:14px;line-height:1.5}
+    .input{display:flex;border-top:1px solid rgba(0,207,255,.1)}
+    textarea{flex:1;background:transparent;border:none;outline:none;color:#fff;padding:12px;font-size:14px;resize:none;min-height:44px;max-height:96px}
+    button{width:96px;border:none;background:rgba(0,207,255,.12);color:#00cfff;font-weight:700;letter-spacing:2px}
+    .bottom{height:52px;border-top:1px solid rgba(0,207,255,.12);background:rgba(0,10,24,.92);display:flex}
+    .tab{flex:1;display:flex;align-items:center;justify-content:center;color:rgba(0,207,255,.35);font-size:12px;letter-spacing:2px}
+    @keyframes pulse{0%,100%{transform:scale(.98)}50%{transform:scale(1.02)}}
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @media(max-width:700px){.chat{height:min(34vh,260px)}.orb{width:min(74vw,220px);height:min(74vw,220px)}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top"><div>ONLINE</div><div class="brand">NEURAL</div><div>v1</div></div>
+    <div class="main">
+      <div class="orb"></div>
+      <div class="chat">
+        <div class="log">Neural App bereit.</div>
+        <div class="input"><textarea placeholder="> Schreiben..."></textarea><button>SEND</button></div>
+      </div>
+    </div>
+    <div class="bottom"><div class="tab">CHAT</div><div class="tab">AGENTS</div><div class="tab">CONFIG</div></div>
+  </div>
+</body>
+</html>'''
+
+render_yaml = '''services:
   - type: web
     name: neuralchat-agent
     env: python
@@ -8,3 +69,14 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+'''
+
+requirements = 'flask\ngunicorn\n'
+
+import os
+os.makedirs('output/app_start', exist_ok=True)
+open('output/app_start/main.py','w',encoding='utf-8').write(main_py)
+open('output/app_start/index.html','w',encoding='utf-8').write(index_html)
+open('output/app_start/render.yaml','w',encoding='utf-8').write(render_yaml)
+open('output/app_start/requirements.txt','w',encoding='utf-8').write(requirements)
+print('created app_start files')
