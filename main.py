@@ -150,7 +150,10 @@ Knowledge Nodes: {stats["knowledge_nodes"]}
     except Exception as e:
         return f"Fehler: {str(e)}"
 
-
+@app.route("/")
+def index():
+    return send_file("index.html")
+    
 @app.route("/style.css")
 def style():
     return send_file("style.css")
