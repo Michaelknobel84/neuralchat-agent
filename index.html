@@ -92,6 +92,13 @@
           <strong>Tools</strong>
           <small>Apps & Funktionen</small>
         </button>
+        
+        <button class="module-card" data-target="actionsView">
+        <span class="module-icon">🛡️</span>
+        <strong>Actions</strong>
+        <small>Security Logs</small>
+       </button>
+
       </section>
     </section>
 
@@ -159,6 +166,22 @@
         <div class="empty-state">Tools werden geladen...</div>
       </div>
     </section>
+    
+    <section class="view" id="actionsView">
+    <div class="section-head">
+        <button class="back-btn" data-target="homeView">←</button>
+        <div>
+            <h2>Action Center</h2>
+            <span>Security Logs & Freigaben</span>
+        </div>
+    </div>
+
+    <div class="panel-list" id="actionList">
+        <div class="empty-state">
+            Noch keine Aktionen protokolliert.
+        </div>
+    </div>
+</section>
 
     <nav class="bottom-nav">
       <button class="nav-btn active" data-target="homeView">⌂<span>Home</span></button>
