@@ -47,7 +47,35 @@ permissions = {
     "voice": False,
     "system_actions": False
 }
+user_role = "admin"
 
+action_log = []
+
+risk_levels = {
+    "chat": "low",
+    "memory": "low",
+    "image_generation": "medium",
+    "social_post_prepare": "medium",
+    "social_post_publish": "high",
+    "email_send": "high",
+    "file_delete": "critical",
+    "payment": "critical"
+}
+
+
+def log_action(action_type, description, risk="low", status="logged"):
+    entry = {
+        "id": len(action_log) + 1,
+        "time": datetime.now().isoformat(),
+        "action_type": action_type,
+        "description": description,
+        "risk": risk,
+        "status": status,
+        "role": user_role
+    }
+
+    action_log.append(entry)
+    return entry
 
 def core_stats():
     memory_nodes = len(memories)
