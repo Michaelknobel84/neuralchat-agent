@@ -6,12 +6,16 @@ const backButtons = document.querySelectorAll(".back-btn");
 const chatForm = document.getElementById("chatForm");
 const chatInput = document.getElementById("chatInput");
 const chatWindow = document.getElementById("chatWindow");
-const memoryOrbit =
-    document.getElementById("memoryOrbit");
+
 const memoryNodes = document.getElementById("memoryNodes");
 const toolNodes = document.getElementById("toolNodes");
+
 const complexityValue = document.getElementById("complexityValue");
 const complexityBar = document.getElementById("complexityBar");
+
+const memoryOrbit =
+    document.getElementById("memoryOrbit");
+    
 const awarenessLabel =
     document.getElementById("awarenessLabel");
 const memoryList = document.getElementById("memoryList");
