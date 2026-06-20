@@ -11,11 +11,20 @@ app = Flask(
 )
 CORS(app)
 
+# ======================
+# CONFIGURATION
+# ======================
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 
+#=======================
+# AI CLIENT
+#========================
 client = Groq(api_key=GROQ_API_KEY)
 
+# ======================
+# ASTRA SYSTEM PROMPT
+# ======================
 SYSTEM = """
 Du bist ASTRA, die neutrale persönliche KI-Persönlichkeit von Michael. Du läufst auf dem NOVA Core.
 Du antwortest auf Deutsch, klar, ruhig, intelligent und hilfreich.
@@ -24,11 +33,17 @@ Du erinnerst dich an wichtige Informationen, hilfst bei Projekten, Aufgaben, Ide
 Du handelst niemals gefährlich oder ohne Zustimmung des Benutzers.
 """
 
+# ======================
+# MEMORY AND STATE
+# ======================
 conversation_history = []
 memories = []
 tasks = []
 results = []
 
+# ======================
+# TOOLS
+# ======================
 tools = [
     {"id": "calendar", "name": "Kalender", "status": "locked", "enabled": False},
     {"id": "email", "name": "E-Mail", "status": "locked", "enabled": False},
@@ -38,6 +53,9 @@ tools = [
     {"id": "voice", "name": "Sprache", "status": "planned", "enabled": False}
 ]
 
+# ======================
+# SECURITY LAYER
+# ======================
 permissions = {
     "calendar": False,
     "email": False,
@@ -62,7 +80,9 @@ risk_levels = {
     "payment": "critical"
 }
 
-
+# ======================
+# CORE FUNCTIONS
+# ======================
 def log_action(action_type, description, risk="low", status="logged"):
     entry = {
         "id": len(action_log) + 1,
@@ -170,6 +190,7 @@ Knowledge Nodes: {stats["knowledge_nodes"]}
     "low",
     "completed"
 )
+)
         
         if memory_added:
             answer += "\n\n🧠 Erinnerung integriert. NOVA Core wurde erweitert."
@@ -184,6 +205,9 @@ Knowledge Nodes: {stats["knowledge_nodes"]}
     except Exception as e:
         return f"Fehler: {str(e)}"
 
+# ======================
+# API ROUTES
+# ======================
 @app.route("/")
 def index():
     return send_file("index.html")
