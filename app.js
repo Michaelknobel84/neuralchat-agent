@@ -382,6 +382,7 @@ function setThinkingMode(active) {
 loadCore();
 loadMemories();
 loadTools();
+loadActions();
 
 setInterval(loadCore, 10000);
 function updateMemoryNodes(count) {
