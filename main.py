@@ -170,7 +170,6 @@ Knowledge Nodes: {stats["knowledge_nodes"]}
     "low",
     "completed"
 )
-)
         
         if memory_added:
             answer += "\n\n🧠 Erinnerung integriert. NOVA Core wurde erweitert."
