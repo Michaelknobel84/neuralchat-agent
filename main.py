@@ -164,7 +164,13 @@ Knowledge Nodes: {stats["knowledge_nodes"]}
         )
 
         answer = response.choices[0].message.content.strip()
-
+        log_action(
+        "chat",
+        f"ASTRA antwortete auf: {message[:50]}",
+        "low",
+        "completed"
+)
+        
         if memory_added:
             answer += "\n\n🧠 Erinnerung integriert. NOVA Core wurde erweitert."
 
