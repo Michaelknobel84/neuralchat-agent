@@ -434,7 +434,7 @@ h1 {
   background: rgba(2, 8, 18, 0.82);
   backdrop-filter: blur(24px);
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   z-index: 10;
 }
 
