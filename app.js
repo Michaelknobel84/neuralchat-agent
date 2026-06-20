@@ -121,6 +121,45 @@ async function loadTools() {
   }
 }
 
+async function loadActions() {
+
+    if (!actionList) return;
+
+    try {
+        const response = await fetch("/logs");
+        const logs = await response.json();
+
+        if (!logs.length) {
+            actionList.innerHTML =
+                '<div class="empty-state">Noch keine Aktionen protokolliert.</div>';
+            return;
+        }
+
+        actionList.innerHTML = "";
+
+        logs.reverse().forEach(log => {
+
+            const div = document.createElement("div");
+
+            div.className =
+                `action-item risk-${log.risk}`;
+
+            div.innerHTML = `
+                <strong>${log.action_type}</strong>
+                <div>${log.description}</div>
+                <small>
+                    ${log.risk.toUpperCase()}
+                </small>
+            `;
+
+            actionList.appendChild(div);
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 function addMessage(text, type = "nova") {
   const div = document.createElement("div");
 
