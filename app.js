@@ -16,10 +16,11 @@ const complexityBar = document.getElementById("complexityBar");
 const awarenessLabel =
     document.getElementById("awarenessLabel");
 
-const memoryOrbit =
-    document.getElementById("memoryOrbit");
+const memoryOrbit = document.getElementById("memoryOrbit");
 const memoryList = document.getElementById("memoryList");
+
 const toolsList = document.getElementById("toolsList");
+const actionList = document.getElementById("actionList");
 
 function showView(viewId) {
   views.forEach(v => v.classList.remove("active"));
