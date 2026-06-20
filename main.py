@@ -395,7 +395,19 @@ def run_tool():
 def health():
     return jsonify({"ok": True, "core": "NOVA"})
 
+@app.route("/security")
+def security():
 
+    return jsonify({
+        "role": user_role,
+        "actions": len(action_log),
+        "risk_levels": risk_levels
+    })
+
+
+@app.route("/logs")
+def logs():
+    return jsonify(action_log)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
