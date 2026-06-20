@@ -340,3 +340,28 @@ loadMemories();
 loadTools();
 
 setInterval(loadCore, 10000);
+function updateMemoryNodes(count) {
+
+    if (!memoryOrbit) return;
+
+    memoryOrbit.innerHTML = "";
+
+    const radius = 120;
+
+    for (let i = 0; i < count; i++) {
+
+        const angle = (Math.PI * 2 / count) * i;
+
+        const x = Math.cos(angle) * radius + 135;
+        const y = Math.sin(angle) * radius + 135;
+
+        const node = document.createElement("div");
+
+        node.className = "memory-node";
+
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+
+        memoryOrbit.appendChild(node);
+    }
+}
