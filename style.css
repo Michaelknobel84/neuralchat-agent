@@ -197,12 +197,15 @@ h1 {
 
 .awareness-label {
   position: absolute;
-  bottom: -42px;
-  color: var(--gold);
+  bottom: -65px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffd166;
   font-size: 11px;
   letter-spacing: 2px;
   text-shadow: 0 0 12px rgba(255,209,102,0.7);
   white-space: nowrap;
+  z-index: 20;
 }
 
 .floating-panel,
