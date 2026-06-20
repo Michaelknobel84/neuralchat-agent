@@ -282,7 +282,7 @@ h1 {
 }
 
 .module-grid {
-  display: grid;
+  display: none;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 8px;
