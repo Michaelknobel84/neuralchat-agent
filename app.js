@@ -6,7 +6,8 @@ const backButtons = document.querySelectorAll(".back-btn");
 const chatForm = document.getElementById("chatForm");
 const chatInput = document.getElementById("chatInput");
 const chatWindow = document.getElementById("chatWindow");
-
+const memoryOrbit =
+    document.getElementById("memoryOrbit");
 const memoryNodes = document.getElementById("memoryNodes");
 const toolNodes = document.getElementById("toolNodes");
 const complexityValue = document.getElementById("complexityValue");
