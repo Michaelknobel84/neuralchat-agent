@@ -60,6 +60,10 @@ async function loadCore() {
     complexityBar.style.width =
       `${data.neural_complexity}%`;
 
+if (awarenessLabel) {
+    awarenessLabel.textContent =
+        `ASTRA AWARENESS ${data.neural_complexity}%`;
+}
   } catch (err) {
     console.error(err);
   }
