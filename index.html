@@ -150,11 +150,25 @@
         </div>
       </div>
 
-      <div class="feature-placeholder">
-        <div class="placeholder-core">🎨</div>
-        <h3>Image Core geplant</h3>
-        <p>Später kann NOVA direkt Bilder erstellen und bearbeiten.</p>
-      </div>
+<div class="panel-list image-engine">
+  <h3>ASTRA Image Engine</h3>
+
+  <textarea id="imagePrompt" placeholder="Beschreibe dein Bild..."></textarea>
+
+  <select id="imageStyle">
+    <option value="nova">Nova Style</option>
+    <option value="neural">Neural</option>
+    <option value="holographic">Holographic</option>
+    <option value="cinematic">Cinematic</option>
+    <option value="custom">Eigener Prompt</option>
+  </select>
+
+  <button id="generateImageBtn">Bild vorbereiten</button>
+
+  <div id="imageResult" class="empty-state">
+    Noch kein Bild vorbereitet.
+  </div>
+</div>
     </section>
 
     <section class="view" id="toolsView">
