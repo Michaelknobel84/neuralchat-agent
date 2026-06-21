@@ -388,6 +388,21 @@ def get_tools():
     })
 
 
+@app.route("/coding-agent")
+def coding_agent():
+
+    return jsonify({
+        "name": "Coding Agent",
+        "status": "online",
+        "abilities": [
+            "Code analysieren",
+            "Fehler finden",
+            "Verbesserungen vorschlagen",
+            "NOVA prüfen"
+        ]
+    })
+
+
 @app.route("/permissions")
 def get_permissions():
     return jsonify({
