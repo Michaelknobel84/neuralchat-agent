@@ -390,7 +390,6 @@ def get_tools():
 
 @app.route("/coding-agent")
 def coding_agent():
-
     return jsonify({
         "name": "Coding Agent",
         "status": "online",
