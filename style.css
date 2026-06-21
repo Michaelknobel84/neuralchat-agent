@@ -619,3 +619,17 @@ h1 {
   text-align: left;
   white-space: pre-wrap;
 }
+#copyPromptBtn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 16px;
+
+    background: rgba(2,8,18,0.85);
+
+    color: var(--gold);
+
+    font-weight: bold;
+}
