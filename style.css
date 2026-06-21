@@ -485,6 +485,50 @@ h1 {
   55% { transform: scale(0.98); }
   70% { transform: scale(1.08); }
 }
+.image-engine textarea {
+    width: 100%;
+    min-height: 120px;
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(2,8,18,0.85);
+    color: white;
+    resize: none;
+    font-size: 14px;
+}
+
+.image-engine select {
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: rgba(2,8,18,0.85);
+    color: white;
+}
+
+.image-engine button {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    border: none;
+    border-radius: 18px;
+    color: white;
+    font-weight: bold;
+    background: linear-gradient(
+        135deg,
+        var(--cyan),
+        var(--violet)
+    );
+    box-shadow:
+        0 0 20px rgba(0,207,255,0.3);
+}
+
+#imageResult {
+    margin-top: 18px;
+}
+
 @media (min-width: 720px) {
   .app-shell {
     max-width: 460px;
