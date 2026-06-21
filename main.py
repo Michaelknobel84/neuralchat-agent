@@ -51,6 +51,7 @@ tools = [
     {"id": "browser", "name": "Browser", "status": "locked", "enabled": False},
     {"id": "images", "name": "Bildgenerierung", "status": "planned", "enabled": False},
     {"id": "voice", "name": "Sprache", "status": "planned", "enabled": False}
+    {"id": "coding_agent","name": "Coding Agent","status": "online","enabled": True,"description": "Analysiert Code und findet Verbesserungen."}
 ]
 
 # ======================
