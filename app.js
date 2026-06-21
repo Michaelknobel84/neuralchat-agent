@@ -471,3 +471,60 @@ if (analyzeBtn) {
         }
     });
 }
+const imagePrompt =
+    document.getElementById("imagePrompt");
+
+const imageStyle =
+    document.getElementById("imageStyle");
+
+const generateImageBtn =
+    document.getElementById("generateImageBtn");
+
+const imageResult =
+    document.getElementById("imageResult");
+
+if (generateImageBtn) {
+    generateImageBtn.addEventListener("click", () => {
+        const prompt = imagePrompt.value.trim();
+        const style = imageStyle.value;
+
+        if (!prompt) {
+            imageResult.innerHTML =
+                "Bitte zuerst eine Bildbeschreibung eingeben.";
+            return;
+        }
+
+        let enhancedPrompt = prompt;
+
+        if (style === "nova") {
+            enhancedPrompt =
+                `${prompt}, futuristic NOVA neural core, holographic sci-fi interface, cyan and violet energy, cinematic lighting, ultra detailed`;
+        }
+
+        if (style === "neural") {
+            enhancedPrompt =
+                `${prompt}, neural network, glowing synapses, data streams, cybernetic intelligence, high detail`;
+        }
+
+        if (style === "holographic") {
+            enhancedPrompt =
+                `${prompt}, holographic projection, transparent light layers, futuristic HUD, blue violet glow`;
+        }
+
+        if (style === "cinematic") {
+            enhancedPrompt =
+                `${prompt}, cinematic composition, dramatic lighting, ultra realistic, high contrast`;
+        }
+
+        if (style === "custom") {
+            enhancedPrompt = prompt;
+        }
+
+        imageResult.innerHTML = `
+            <strong>Vorbereiteter Prompt:</strong>
+            <br><br>
+            ${enhancedPrompt}
+        `;
+    });
+}
+
