@@ -538,3 +538,40 @@ h1 {
     font-size: 13px;
     color: #c5d4e6;
 }
+.coding-box {
+  margin-top: 14px;
+}
+
+.coding-box h3 {
+  color: var(--cyan);
+  margin-bottom: 12px;
+}
+
+.coding-box textarea {
+  width: 100%;
+  min-height: 160px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(2, 8, 18, 0.88);
+  color: var(--text);
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+}
+
+.coding-box button {
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: white;
+  padding: 12px;
+  font-weight: 700;
+}
+
+#codeResult {
+  margin-top: 12px;
+  text-align: left;
+  white-space: pre-wrap;
+}
