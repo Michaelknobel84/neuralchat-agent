@@ -401,6 +401,46 @@ def coding_agent():
         ]
     })
 
+@app.route("/coding-agent/analyze", methods=["POST"])
+def coding_agent_analyze():
+    data = request.json or {}
+    code = data.get("code", "").strip()
+    question = data.get("question", "Prüfe diesen Code auf Fehler.").strip()
+
+    if not code:
+        return jsonify({"error": "Kein Code angegeben"}), 400
+
+    prompt = f"""
+Du bist der Coding Agent im NOVA Core.
+Prüfe den folgenden Code sorgfältig.
+
+Aufgabe:
+{question}
+
+Code:
+{code}
+
+Antworte strukturiert:
+1. Fehler
+2. Ursache
+3. Korrektur
+4. Verbesserungsvorschlag
+"""
+
+    result = ask_nova(prompt, max_tokens=1200)
+
+    log_action(
+        "coding_agent",
+        "Coding Agent hat Code analysiert.",
+        "low",
+        "completed"
+    )
+
+    return jsonify({
+        "agent": "Coding Agent",
+        "status": "completed",
+        "result": result
+    })
 
 @app.route("/permissions")
 def get_permissions():
