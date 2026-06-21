@@ -417,3 +417,57 @@ function updateMemoryNodes(count) {
         memoryOrbit.appendChild(node);
     }
 }
+const analyzeBtn =
+    document.getElementById("analyzeCodeBtn");
+
+const codeInput =
+    document.getElementById("codeInput");
+
+const codeResult =
+    document.getElementById("codeResult");
+
+if (analyzeBtn) {
+
+    analyzeBtn.addEventListener("click", async () => {
+
+        const code = codeInput.value.trim();
+
+        if (!code) {
+            codeResult.innerHTML =
+                "Bitte zuerst Code eingeben.";
+            return;
+        }
+
+        codeResult.innerHTML =
+            "Coding Agent analysiert...";
+
+        try {
+
+            const response = await fetch(
+                "/coding-agent/analyze",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        question: "Prüfe diesen Code."
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            codeResult.innerHTML =
+                data.result;
+
+        } catch (err) {
+
+            codeResult.innerHTML =
+                "Analyse fehlgeschlagen.";
+
+            console.error(err);
+        }
+    });
+}
