@@ -38,7 +38,7 @@ body {
   position: relative;
   z-index: 2;
   height: 100vh;
-  padding: calc(34px + env(safe-area-inset-top)) 16px 82px;
+  padding: calc(30px + env(safe-area-inset-top)) 16px 82px;
   overflow: hidden;
 }
 
