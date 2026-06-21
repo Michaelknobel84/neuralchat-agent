@@ -109,12 +109,19 @@ async function loadTools() {
     const response = await fetch("/tools");
     const data = await response.json();
 
-    toolsList.innerHTML = data.tools.map(tool => `
-      <div class="module-card">
-        <strong>${tool.name}</strong>
-        <small>Status: ${tool.status}</small>
-      </div>
-    `).join("");
+  toolsList.innerHTML = data.tools.map(tool => `
+  <div class="agent-card">
+    <div class="agent-icon">
+      ${tool.id === "coding_agent" ? "🤖" : "⚙️"}
+    </div>
+
+    <div>
+      <strong>${tool.name}</strong>
+      <small>Status: ${tool.status}</small>
+      ${tool.description ? `<p>${tool.description}</p>` : ""}
+    </div>
+  </div>
+`).join("");
 
   } catch (err) {
     console.error(err);
