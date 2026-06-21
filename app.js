@@ -480,8 +480,8 @@ const imageStyle =
 const generateImageBtn =
     document.getElementById("generateImageBtn");
 
-const imageResult =
-    document.getElementById("imageResult");
+const copyPromptBtn =
+    document.getElementById("copyPromptBtn");
 
 if (generateImageBtn) {
     generateImageBtn.addEventListener("click", () => {
@@ -528,3 +528,21 @@ if (generateImageBtn) {
     });
 }
 
+if (copyPromptBtn) {
+
+    copyPromptBtn.addEventListener("click", () => {
+
+        const text =
+            imageResult.innerText;
+
+        navigator.clipboard.writeText(text);
+
+        copyPromptBtn.innerHTML =
+            "✅ Kopiert";
+
+        setTimeout(() => {
+            copyPromptBtn.innerHTML =
+                "📋 Prompt kopieren";
+        }, 2000);
+    });
+}
