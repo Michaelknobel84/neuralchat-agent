@@ -307,14 +307,14 @@ function spawnPulse() {
 function createDataArms() {
   dataArms = [];
 
-  const arms = 2;
+  const arms = 12;
 
   for (let i = 0; i < arms; i++) {
     dataArms.push({
       angle: (Math.PI * 2 / arms) * i,
       offset: Math.random() * Math.PI * 2,
       speed: 0.006 + Math.random() * 0.004,
-      length: 150 + Math.random() * 50,
+      length: 170 + Math.random() * 120,
       color: i % 2 === 0
         ? "rgba(0,207,255,0.75)"
         : "rgba(139,92,246,0.65)"
@@ -361,6 +361,63 @@ function animate() {
 
 dataArms.forEach(arm => {
   const time = Date.now() * arm.speed;
+
+  const startRadius = 105;
+  const endRadius = arm.length;
+
+  const strands = 4;
+
+  for (let s = 0; s < strands; s++) {
+    const strandOffset = (s - 1.5) * 0.045;
+    const wobble = Math.sin(time + arm.offset + s) * 0.22;
+
+    const angle = arm.angle + wobble + strandOffset;
+
+    const startX = centerX + Math.cos(angle) * startRadius;
+    const startY = centerY + Math.sin(angle) * startRadius;
+
+    const endX = centerX + Math.cos(angle) * endRadius;
+    const endY = centerY + Math.sin(angle) * endRadius;
+
+    const controlX =
+      centerX + Math.cos(angle + 0.45) * (endRadius * 0.62);
+
+    const controlY =
+      centerY + Math.sin(angle + 0.45) * (endRadius * 0.62);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+
+    ctx.strokeStyle = arm.color;
+    ctx.lineWidth = thinkingMode ? 0.9 : 0.42;
+    ctx.globalAlpha = thinkingMode ? 0.72 : 0.32;
+    ctx.shadowBlur = thinkingMode ? 18 : 9;
+    ctx.shadowColor = arm.color;
+    ctx.stroke();
+    ctx.restore();
+
+    const packetProgress =
+      (time * 0.55 + arm.offset + s * 0.18) % 1;
+
+    const packetX =
+      startX + (endX - startX) * packetProgress;
+
+    const packetY =
+      startY + (endY - startY) * packetProgress;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(packetX, packetY, thinkingMode ? 2.4 : 1.6, 0, Math.PI * 2);
+    ctx.fillStyle = arm.color;
+    ctx.globalAlpha = thinkingMode ? 0.9 : 0.55;
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = arm.color;
+    ctx.fill();
+    ctx.restore();
+  }
+});
 
   const startRadius = 95;
   const endRadius = arm.length;
