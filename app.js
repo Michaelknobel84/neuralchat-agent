@@ -443,7 +443,11 @@ for (let i = 0; i < neuralNodes.length; i++) {
     const dy = neuralNodes[i].y - neuralNodes[j].y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < 95) {
+  if (
+      dist < 95 &&
+      Math.hypot(neuralNodes[i].x - centerX, neuralNodes[i].y - centerY) > 125 &&
+      Math.hypot(neuralNodes[j].x - centerX, neuralNodes[j].y - centerY) > 125
+) {
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(neuralNodes[i].x, neuralNodes[i].y);
