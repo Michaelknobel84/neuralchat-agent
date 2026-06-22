@@ -307,14 +307,14 @@ function spawnPulse() {
 function createDataArms() {
   dataArms = [];
 
-  const arms = 12;
+  const arms = 22;
 
   for (let i = 0; i < arms; i++) {
     dataArms.push({
       angle: (Math.PI * 2 / arms) * i,
       offset: Math.random() * Math.PI * 2,
       speed: 0.006 + Math.random() * 0.004,
-      length: 170 + Math.random() * 120,
+      length: 140 + Math.random() * 180,
       color: i % 2 === 0
         ? "rgba(0,207,255,0.75)"
         : "rgba(139,92,246,0.65)"
@@ -395,7 +395,7 @@ dataArms.forEach(arm => {
   ctx.quadraticCurveTo(midX, midY, endX, endY);
 
   ctx.strokeStyle = arm.color;
-  ctx.lineWidth = thinkingMode ? 1.2 : 0.55;
+  ctx.lineWidth = thinkingMode ? 0.8 : 0.35;
   ctx.shadowBlur = thinkingMode ? 24 : 14;
   ctx.shadowColor = arm.color;
   ctx.globalAlpha = thinkingMode ? 0.65 : 0.28;
