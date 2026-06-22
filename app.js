@@ -421,6 +421,46 @@ dataArms.forEach(arm => {
   ctx.restore();
 });
 
+neuralNodes.forEach(node => {
+  const t = Date.now() * node.speed;
+
+  node.x = node.baseX + Math.cos(t + node.phase) * 12;
+  node.y = node.baseY + Math.sin(t + node.phase) * 12;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
+  ctx.fillStyle = node.color;
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = node.color;
+  ctx.fill();
+  ctx.restore();
+});
+
+for (let i = 0; i < neuralNodes.length; i++) {
+  for (let j = i + 1; j < neuralNodes.length; j++) {
+    const dx = neuralNodes[i].x - neuralNodes[j].x;
+    const dy = neuralNodes[i].y - neuralNodes[j].y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < 95) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(neuralNodes[i].x, neuralNodes[i].y);
+      ctx.lineTo(neuralNodes[j].x, neuralNodes[j].y);
+
+      const alpha = (1 - dist / 95) * 0.35;
+
+      ctx.strokeStyle = `rgba(0,207,255,${alpha})`;
+      ctx.lineWidth = 0.45;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = "rgba(0,207,255,0.7)";
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
+
   particles.forEach(p => {
     const pull = thinkingMode ? 0.0009 : 0.00025;
 
