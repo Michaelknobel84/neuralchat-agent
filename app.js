@@ -307,14 +307,14 @@ function spawnPulse() {
 function createDataArms() {
   dataArms = [];
 
-  const arms = 4;
+  const arms = 2;
 
   for (let i = 0; i < arms; i++) {
     dataArms.push({
       angle: (Math.PI * 2 / arms) * i,
       offset: Math.random() * Math.PI * 2,
       speed: 0.006 + Math.random() * 0.004,
-      length: 180 + Math.random() * 80,
+      length: 150 + Math.random() * 50,
       color: i % 2 === 0
         ? "rgba(0,207,255,0.75)"
         : "rgba(139,92,246,0.65)"
