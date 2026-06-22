@@ -301,7 +301,7 @@ function spawnPulse() {
 function createDataArms() {
   dataArms = [];
 
-  const arms = 8;
+  const arms = 4;
 
   for (let i = 0; i < arms; i++) {
     dataArms.push({
