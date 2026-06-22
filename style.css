@@ -203,16 +203,29 @@ box-shadow:
   inset: 10px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7), transparent 18%),
-    radial-gradient(circle at 70% 75%, rgba(0,0,0,0.45), transparent 38%);
+  radial-gradient(
+    circle at 32% 28%,
+    rgba(255,255,255,0.85),
+    transparent 15%
+  ),
+  radial-gradient(
+    circle at 50% 50%,
+    rgba(0,207,255,0.18),
+    transparent 55%
+  ),
+  radial-gradient(
+    circle at 75% 75%,
+    rgba(0,0,0,0.5),
+    transparent 40%
+  );
   pointer-events: none;
 }
 
 .core-center::after {
   content: "";
   position: absolute;
-  width: 160%;
-  height: 45%;
+  width: 120%;
+  height: 18%;
   top: -18%;
   left: -30%;
   background: linear-gradient(
@@ -535,7 +548,7 @@ box-shadow:
   }
 
   35% {
-    opacity: 0.8;
+    opacity: 0.25;
   }
 
   100% {
