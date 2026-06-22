@@ -361,7 +361,7 @@ function animate() {
 dataArms.forEach(arm => {
   const time = Date.now() * arm.speed;
 
-  const startRadius = 55;
+  const startRadius = 95;
   const endRadius = arm.length;
 
   const wobble =
