@@ -360,10 +360,10 @@ dataArms.forEach(arm => {
   ctx.quadraticCurveTo(midX, midY, endX, endY);
 
   ctx.strokeStyle = arm.color;
-  ctx.lineWidth = thinkingMode ? 2.2 : 1.2;
+  ctx.lineWidth = thinkingMode ? 1.2 : 0.55;
   ctx.shadowBlur = thinkingMode ? 24 : 14;
   ctx.shadowColor = arm.color;
-  ctx.globalAlpha = thinkingMode ? 0.95 : 0.55;
+  ctx.globalAlpha = thinkingMode ? 0.65 : 0.28;
 
   ctx.stroke();
   ctx.restore();
@@ -379,7 +379,7 @@ dataArms.forEach(arm => {
 
   ctx.save();
   ctx.beginPath();
-  ctx.arc(packetX, packetY, 3.5, 0, Math.PI * 2);
+  ctx.arc(packetX, packetY, 2.2, 0, Math.PI * 2);
   ctx.fillStyle = arm.color;
   ctx.shadowBlur = 22;
   ctx.shadowColor = arm.color;
