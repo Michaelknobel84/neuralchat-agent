@@ -362,60 +362,64 @@ function animate() {
 dataArms.forEach(arm => {
   const time = Date.now() * arm.speed;
 
-  const startRadius = 105;
+  const startRadius = 95;
   const endRadius = arm.length;
 
-  const strands = 4;
+  const wobble =
+    Math.sin(time + arm.offset) * 0.22;
 
-  for (let s = 0; s < strands; s++) {
-    const strandOffset = (s - 1.5) * 0.045;
-    const wobble = Math.sin(time + arm.offset + s) * 0.22;
+  const angle =
+    arm.angle + wobble;
 
-    const angle = arm.angle + wobble + strandOffset;
+  const startX =
+    centerX + Math.cos(angle) * startRadius;
 
-    const startX = centerX + Math.cos(angle) * startRadius;
-    const startY = centerY + Math.sin(angle) * startRadius;
+  const startY =
+    centerY + Math.sin(angle) * startRadius;
 
-    const endX = centerX + Math.cos(angle) * endRadius;
-    const endY = centerY + Math.sin(angle) * endRadius;
+  const endX =
+    centerX + Math.cos(angle) * endRadius;
 
-    const controlX =
-      centerX + Math.cos(angle + 0.45) * (endRadius * 0.62);
+  const endY =
+    centerY + Math.sin(angle) * endRadius;
 
-    const controlY =
-      centerY + Math.sin(angle + 0.45) * (endRadius * 0.62);
+  const midX =
+    centerX + Math.cos(angle) * (endRadius * 0.45);
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+  const midY =
+    centerY + Math.sin(angle) * (endRadius * 0.45);
 
-    ctx.strokeStyle = arm.color;
-    ctx.lineWidth = thinkingMode ? 0.9 : 0.42;
-    ctx.globalAlpha = thinkingMode ? 0.72 : 0.32;
-    ctx.shadowBlur = thinkingMode ? 18 : 9;
-    ctx.shadowColor = arm.color;
-    ctx.stroke();
-    ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.quadraticCurveTo(midX, midY, endX, endY);
 
-    const packetProgress =
-      (time * 0.55 + arm.offset + s * 0.18) % 1;
+  ctx.strokeStyle = arm.color;
+  ctx.lineWidth = thinkingMode ? 1.2 : 0.55;
+  ctx.shadowBlur = thinkingMode ? 24 : 14;
+  ctx.shadowColor = arm.color;
+  ctx.globalAlpha = thinkingMode ? 0.65 : 0.28;
 
-    const packetX =
-      startX + (endX - startX) * packetProgress;
+  ctx.stroke();
+  ctx.restore();
 
-    const packetY =
-      startY + (endY - startY) * packetProgress;
+  const packetProgress =
+    (time + arm.offset) % 1;
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(packetX, packetY, thinkingMode ? 2.4 : 1.6, 0, Math.PI * 2);
-    ctx.fillStyle = arm.color;
-    ctx.globalAlpha = thinkingMode ? 0.9 : 0.55;
-    ctx.shadowBlur = 18;
-    ctx.shadowColor = arm.color;
-    ctx.fill();
-    ctx.restore();
+  const packetX =
+    startX + (endX - startX) * packetProgress;
+
+  const packetY =
+    startY + (endY - startY) * packetProgress;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(packetX, packetY, 2.2, 0, Math.PI * 2);
+  ctx.fillStyle = arm.color;
+  ctx.shadowBlur = 22;
+  ctx.shadowColor = arm.color;
+  ctx.fill();
+  ctx.restore();
 });
 
   const startRadius = 95;
