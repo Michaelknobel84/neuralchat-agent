@@ -324,6 +324,69 @@ function animate() {
   const centerX = canvas.width / 2;
   const centerY = canvas.height * 0.38;
 
+dataArms.forEach(arm => {
+  const time = Date.now() * arm.speed;
+
+  const startRadius = 55;
+  const endRadius = arm.length;
+
+  const wobble =
+    Math.sin(time + arm.offset) * 0.35;
+
+  const angle =
+    arm.angle + wobble;
+
+  const startX =
+    centerX + Math.cos(angle) * startRadius;
+
+  const startY =
+    centerY + Math.sin(angle) * startRadius;
+
+  const endX =
+    centerX + Math.cos(angle) * endRadius;
+
+  const endY =
+    centerY + Math.sin(angle) * endRadius;
+
+  const midX =
+    centerX + Math.cos(angle + 0.7) * (endRadius * 0.55);
+
+  const midY =
+    centerY + Math.sin(angle + 0.7) * (endRadius * 0.55);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.quadraticCurveTo(midX, midY, endX, endY);
+
+  ctx.strokeStyle = arm.color;
+  ctx.lineWidth = thinkingMode ? 2.2 : 1.2;
+  ctx.shadowBlur = thinkingMode ? 24 : 14;
+  ctx.shadowColor = arm.color;
+  ctx.globalAlpha = thinkingMode ? 0.95 : 0.55;
+
+  ctx.stroke();
+  ctx.restore();
+
+  const packetProgress =
+    (time + arm.offset) % 1;
+
+  const packetX =
+    startX + (endX - startX) * packetProgress;
+
+  const packetY =
+    startY + (endY - startY) * packetProgress;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(packetX, packetY, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = arm.color;
+  ctx.shadowBlur = 22;
+  ctx.shadowColor = arm.color;
+  ctx.fill();
+  ctx.restore();
+});
+
   particles.forEach(p => {
     const pull = thinkingMode ? 0.0009 : 0.00025;
 
