@@ -246,11 +246,16 @@ const ctx = canvas.getContext("2d");
 let particles = [];
 let pulses = [];
 let dataArms = [];
+let neuralNodes = [];
 let thinkingMode = false;
 
 function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+
+  createParticles?.();
+  createDataArms?.();
+  createNeuralNodes?.();
 }
 
 window.addEventListener("resize", resize);
@@ -317,6 +322,35 @@ function createDataArms() {
 }
 
 createDataArms();
+
+function createNeuralNodes() {
+  neuralNodes = [];
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height * 0.48;
+
+  const count = 42;
+
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 80 + Math.random() * 190;
+
+    neuralNodes.push({
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * radius,
+      baseX: centerX + Math.cos(angle) * radius,
+      baseY: centerY + Math.sin(angle) * radius,
+      r: Math.random() * 1.8 + 1,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.008 + Math.random() * 0.008,
+      color: Math.random() > 0.35
+        ? "rgba(0,207,255,0.9)"
+        : "rgba(139,92,246,0.85)"
+    });
+  }
+}
+
+createNeuralNodes();
 
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
