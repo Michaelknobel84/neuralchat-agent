@@ -416,7 +416,6 @@ dataArms.forEach(arm => {
     ctx.shadowColor = arm.color;
     ctx.fill();
     ctx.restore();
-  }
 });
 
   const startRadius = 95;
