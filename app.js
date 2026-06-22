@@ -248,6 +248,7 @@ let pulses = [];
 let dataArms = [];
 let neuralNodes = [];
 let thinkingMode = false;
+let astraAwareness = 14;
 
 function resize() {
   canvas.width = window.innerWidth;
