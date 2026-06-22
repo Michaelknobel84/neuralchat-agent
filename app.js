@@ -383,10 +383,10 @@ dataArms.forEach(arm => {
     centerY + Math.sin(angle) * endRadius;
 
   const midX =
-    centerX + Math.cos(angle + 0.7) * (endRadius * 0.55);
+    centerX + Math.cos(angle) * (endRadius * 0.45);
 
   const midY =
-    centerY + Math.sin(angle + 0.7) * (endRadius * 0.55);
+    centerY + Math.sin(angle) * (endRadius * 0.45);
 
   ctx.save();
   ctx.beginPath();
